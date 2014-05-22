@@ -15,9 +15,10 @@ public class CyActivator extends AbstractCyActivator {
 		SampleTaskFactory taskFactory = new SampleTaskFactory();
 		
 		Properties properties = new Properties();
-		properties.put(TITLE, "Sample Task");
+		properties.put(TITLE, "Run Heinz");
 		properties.put(PREFERRED_MENU, "Apps");
 		properties.put(ENABLE_FOR, ENABLE_FOR_NETWORK);
+		properties.put(TOOLTIP, "Identify functional modules based on p-values");
 		
 		registerService(context, taskFactory, NetworkTaskFactory.class, properties);
 	}
