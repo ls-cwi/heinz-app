@@ -1,10 +1,12 @@
 package org.cytoscape.heinz.internal;
 
 import java.util.Properties;
-
 import org.cytoscape.service.util.AbstractCyActivator;
 import org.cytoscape.task.NetworkTaskFactory;
 import org.osgi.framework.BundleContext;
+
+import static org.cytoscape.work.ServiceProperties.*;
+import static org.cytoscape.application.swing.ActionEnableSupport.ENABLE_FOR_NETWORK;
 
 public class CyActivator extends AbstractCyActivator {
 
@@ -13,9 +15,9 @@ public class CyActivator extends AbstractCyActivator {
 		SampleTaskFactory taskFactory = new SampleTaskFactory();
 		
 		Properties properties = new Properties();
-		properties.put("title", "Sample Task");
-		properties.put("preferredMenu", "Apps");
-		properties.put("enableFor", "network");
+		properties.put(TITLE, "Sample Task");
+		properties.put(PREFERRED_MENU, "Apps");
+		properties.put(ENABLE_FOR, ENABLE_FOR_NETWORK);
 		
 		registerService(context, taskFactory, NetworkTaskFactory.class, properties);
 	}
