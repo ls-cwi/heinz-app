@@ -5,8 +5,9 @@ import java.util.List;
 import java.util.ArrayList;
 
 import org.cytoscape.task.AbstractNetworkTask;
-import org.cytoscape.model.CyColumn;
 import org.cytoscape.model.CyNetwork;
+import org.cytoscape.model.CyColumn;
+import org.cytoscape.model.CyRow;
 import org.cytoscape.work.TaskMonitor;
 import org.cytoscape.work.Tunable;
 import org.cytoscape.work.util.ListSingleSelection;
@@ -66,8 +67,23 @@ public class HeinzTask extends AbstractNetworkTask {
 		// Give the task a title (shown in status monitor)
 		taskMonitor.setTitle("Running Heinz.");
 		
-		taskMonitor.setStatusMessage("Checking parameters");
-		// TODO check if p-value column consists of numbers between 0 and 1
+		taskMonitor.setStatusMessage("Validating parameters");
+		// Check if the p-value column consists of numbers between 0 and 1
+		for (CyRow row : network.getDefaultNodeTable().getAllRows()) {
+			if (!row.isSet(pValueColumnName.getSelectedValue())) {
+				throw new IllegalArgumentException(
+						"p-value for node ‘" +
+						row.get(CyNetwork.NAME, String.class) +
+						"’ missing.");
+			}
+			double pValue =  row.get(pValueColumnName.getSelectedValue(), Double.class);
+			if (pValue < 0.0 || pValue > 1.0) {
+				throw new IllegalArgumentException(
+						"Invalid p-value for node ‘" +
+						row.get(CyNetwork.NAME, String.class) +
+						"’.");
+			}
+		}
 		taskMonitor.setProgress(0.02);
 		
 		taskMonitor.setStatusMessage("Sending node table to Heinz");
