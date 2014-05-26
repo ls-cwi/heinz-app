@@ -12,7 +12,7 @@ public class CyActivator extends AbstractCyActivator {
 
 	@Override
 	public void start(BundleContext context) throws Exception {
-		SampleTaskFactory taskFactory = new SampleTaskFactory();
+		HeinzTaskFactory taskFactory = new HeinzTaskFactory();
 		
 		Properties properties = new Properties();
 		properties.put(TITLE, "Run Heinz");
