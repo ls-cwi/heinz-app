@@ -20,18 +20,18 @@ import org.cytoscape.work.util.BoundedDouble;
 public class HeinzTask extends AbstractNetworkTask {
 
 	// Tunable parameters to be provided by the user before run() is called
-	@Tunable(description="Node table column with p-values")
-	public ListSingleSelection<String> pValueColumnName;
-	@Tunable(description="False-discovery rate")
-	public BoundedDouble fdr = new BoundedDouble(0.0, 0.01,	1.0, true, true);
-	@Tunable(
-			description="Shape parameter (a)",
-			groups={"BUM model parameters"})
-	public BoundedDouble a = new BoundedDouble(0.0, 0.25, 1.0, true, true);
 	@Tunable(
 			description="Mixture parameter (λ)",
 			groups={"BUM model parameters"})
 	public BoundedDouble lambda = new BoundedDouble(0.0, 0.5, 1.0, true, true);
+	@Tunable(
+			description="Shape parameter (a)",
+			groups={"BUM model parameters"})
+	public BoundedDouble a = new BoundedDouble(0.0, 0.25, 1.0, true, true);
+	@Tunable(description="Node table column with p-values")
+	public ListSingleSelection<String> pValueColumnName;
+	@Tunable(description="False-discovery rate")
+	public BoundedDouble fdr = new BoundedDouble(0.0, 0.01,	1.0, true, true);
 
 	/**
 	 * Initialise the task, getting a CyNetwork. 
