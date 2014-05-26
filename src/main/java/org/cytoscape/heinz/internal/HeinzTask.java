@@ -10,6 +10,7 @@ import org.cytoscape.model.CyNetwork;
 import org.cytoscape.work.TaskMonitor;
 import org.cytoscape.work.Tunable;
 import org.cytoscape.work.util.ListSingleSelection;
+import org.cytoscape.work.util.BoundedDouble;
 
 
 /**
@@ -21,15 +22,15 @@ public class HeinzTask extends AbstractNetworkTask {
 	@Tunable(description="Node table column with p-values")
 	public ListSingleSelection<String> pValueColumnName;
 	@Tunable(description="False-discovery rate")
-	public double fdr = 0.01;
+	public BoundedDouble fdr = new BoundedDouble(0.0, 0.01,	1.0, true, true);
 	@Tunable(
 			description="Shape parameter (a)",
 			groups={"BUM model parameters"})
-	public double a;
+	public BoundedDouble a = new BoundedDouble(0.0, 0.25, 1.0, true, true);
 	@Tunable(
 			description="Mixture parameter (λ)",
 			groups={"BUM model parameters"})
-	public double lambda;
+	public BoundedDouble lambda = new BoundedDouble(0.0, 0.5, 1.0, true, true);
 
 	/**
 	 * Initialise the task, getting a CyNetwork. 
@@ -66,7 +67,7 @@ public class HeinzTask extends AbstractNetworkTask {
 		taskMonitor.setTitle("Running Heinz.");
 		
 		taskMonitor.setStatusMessage("Checking parameters");
-		// TODO
+		// TODO check if p-value column consists of numbers between 0 and 1
 		taskMonitor.setProgress(0.02);
 		
 		taskMonitor.setStatusMessage("Sending node table to Heinz");
