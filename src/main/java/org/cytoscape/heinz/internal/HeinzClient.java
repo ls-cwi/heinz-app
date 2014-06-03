@@ -22,7 +22,7 @@ public interface HeinzClient {
 	 * @param nodeTable  the node table in which the attributes can be found
 	 * @param pValueColumnName  the name of the p-value column in nodeTable
 	 * 
-	 * @throws IOException if the table cannot be written.
+	 * @throws IOException  if the table cannot be written successfully
 	 */
 	public void sendNodeTable(CyTable nodeTable, String pValueColumnName)
 			throws IOException;
@@ -30,40 +30,41 @@ public interface HeinzClient {
 	/**
 	 * Set/write the edge table to be read by Heinz.
 	 * 
-	 * @param edgeTable - the edge table representing the network.
+	 * @param edgeTable  the edge table representing the network.
 	 * 
-	 * @throws IOException if the table cannot be written.
+	 * @throws IOException  if the table cannot be written successfully
 	 */
 	public void sendEdgeTable(CyTable edgeTable) throws IOException;
 	
 	/**
 	 * Set/write the BUM mixture parameter for the Heinz run.
 	 * 
-	 * @param lambda - the mixture parameter of the BUM model
+	 * @param lambda  the mixture parameter of the BUM model
 	 */
 	public void sendLambda(double lambda) throws IOException;
 	
 	/**
 	 * Set/write the BUM shape parameter for the Heinz run.
 	 * 
-	 * @param a - the shape parameter of the BUM model
+	 * @param a  the shape parameter of the BUM model
 	 */
 	public void sendA(double a) throws IOException;
 	
 	/**
 	 * Set write the false discovery rate for the Heinz run.
 	 * 
-	 * @param fdr - the FDR parameter 
+	 * @param fdr  the FDR parameter 
 	 */
 	public void sendFdr(double fdr);
 	
 	/**
 	 * Run Heinz with the parameters set beforehand.
 	 * 
-	 * @throws IOException if Heinz does not finish successfully.
+	 * @throws IOException  if Heinz does not terminate successfully
 	 */
 	public void runHeinz() throws IOException;
 	
-	// TODO decide what the getResults() method should return
+	// TODO decide what the getResults() method should return,
+	// or if runHeinz() itself should return the results
 	
 }
