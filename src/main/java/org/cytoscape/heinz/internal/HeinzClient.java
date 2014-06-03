@@ -12,15 +12,15 @@ public interface HeinzClient {
 	/**
 	 * Test if the (external) Heinz provider is present and ready.
 	 * 
-	 * @throws IOException if Heinz cannot be reached for any reason.
+	 * @throws IOException  if Heinz cannot be reached for any reason
 	 */
 	public void ping() throws IOException;
 	
 	/**
 	 * Set/write node attributes to be read by Heinz.
 	 * 
-	 * @param nodeTable - the node table in which the attributes can be found.
-	 * @param pValueColumnName - the name of the column in nodeTable.
+	 * @param nodeTable  the node table in which the attributes can be found
+	 * @param pValueColumnName  the name of the p-value column in nodeTable
 	 * 
 	 * @throws IOException if the table cannot be written.
 	 */
