@@ -3,6 +3,7 @@ package org.cytoscape.heinz.internal;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.io.IOException;
 
 import org.cytoscape.task.AbstractNetworkTask;
 import org.cytoscape.model.CyNetwork;
@@ -32,6 +33,10 @@ public class HeinzTask extends AbstractNetworkTask {
 	public ListSingleSelection<String> pValueColumnName;
 	@Tunable(description="False-discovery rate")
 	public BoundedDouble fdr = new BoundedDouble(0.0, 0.01,	1.0, true, true);
+	@Tunable(description="Host", groups={"Server details"})
+	public String serverHost = "localhost";
+	@Tunable(description="Port", groups={"Server details"})
+	public int serverPort = 9000;
 
 	/**
 	 * Initialise the task, getting a CyNetwork. 
@@ -57,9 +62,12 @@ public class HeinzTask extends AbstractNetworkTask {
 
     /**
      * Run Heinz and add a column to the node table.
+     * 
+     * @throws IOException  if an error occurs communicating to Heinz
      */
 	@Override
-	public void run(final TaskMonitor taskMonitor) {
+	public void run(final TaskMonitor taskMonitor)
+			throws IOException {
 		
 		// TODO handle cancellation using if(cancelled) or overriding
 		// cancel(), and calling a cleanup method
@@ -85,6 +93,9 @@ public class HeinzTask extends AbstractNetworkTask {
 			}
 		}
 		taskMonitor.setProgress(0.02);
+		
+		taskMonitor.setStatusMessage("Connecting to the Heinz server");
+		HeinzClient client = new SwHeinzClient(serverHost, serverPort);
 		
 		taskMonitor.setStatusMessage("Sending node table to Heinz");
 		// TODO
