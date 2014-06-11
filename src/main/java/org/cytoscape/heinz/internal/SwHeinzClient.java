@@ -129,4 +129,14 @@ public class SwHeinzClient extends AbstractSwClient implements HeinzClient {
 		
 	}
 	
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void retrieveResults(CyTable nodeTable, String resultColumnName)
+			throws IOException, IllegalArgumentException {
+		// TODO Auto-generated method stub
+		
+	}
+	
 }

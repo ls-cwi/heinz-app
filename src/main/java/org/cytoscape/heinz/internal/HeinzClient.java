@@ -51,7 +51,7 @@ public interface HeinzClient {
 	public void sendA(double a) throws IOException;
 	
 	/**
-	 * Set write the false discovery rate for the Heinz run.
+	 * Set/write the false discovery rate for the Heinz run.
 	 * 
 	 * @param fdr  the FDR parameter 
 	 */
@@ -60,11 +60,28 @@ public interface HeinzClient {
 	/**
 	 * Run Heinz with the parameters set beforehand.
 	 * 
+	 * The parameters can be set using various other methods of this class.
+	 * 
 	 * @throws IOException  if Heinz does not terminate successfully
 	 */
 	public void runHeinz() throws IOException;
 	
-	// TODO decide what the getResults() method should return,
-	// or if runHeinz() itself should return the results
+	/**
+	 * Retrieve Heinz results and add a boolean column to the node table.
+	 * 
+	 * Heinz must have been run beforehand to generate the results. If the
+	 * result column already exists and is of type boolean, it will be
+	 * overwritten.
+	 * 
+	 * @param nodeTable  the node table, into which to add the column
+	 * @param resultColumnName  name of the column to add
+	 * 
+	 * @throws IOException  if the results could not be retrieved
+	 * @throws IllegalArgumentException  if the column is of the wrong type
+	 * 
+	 * @see #runHeinz()
+	 */
+	public void retrieveResults(CyTable nodeTable, String resultColumnName)
+			throws IOException, IllegalArgumentException;
 	
 }
