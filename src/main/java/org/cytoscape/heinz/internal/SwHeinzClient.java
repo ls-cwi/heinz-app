@@ -13,7 +13,7 @@ import org.cytoscape.model.CyRow;
 /**
  * Communicates with Heinz via a simple client-server protocol.
  */
-public class SwHeinzClient extends SwClient implements HeinzClient {
+public class SwHeinzClient extends AbstractSwClient implements HeinzClient {
 	
 	/**
 	 * Initialise a connection to a Heinz server.

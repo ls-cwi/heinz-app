@@ -18,7 +18,7 @@ import java.nio.charset.Charset;
  * 
  * @see <a href="https://github.com/melkebir/server-wrapper">server-wrapper</a>
  */
-public abstract class SwClient {
+public abstract class AbstractSwClient {
 	/**
 	 * Represents a message from the client to the server wrapper.
 	 */
@@ -237,7 +237,7 @@ public abstract class SwClient {
 	 * @throws IOException  if a connection to a compatible server could not be made
 	 * @throws UnknownHostException  if the server’s IP address could not be determined
 	 */
-	public SwClient (String host, int port)
+	public AbstractSwClient (String host, int port)
 			throws IOException, UnknownHostException {
 		socket = new Socket(host, port);
 		inputStream = socket.getInputStream();
