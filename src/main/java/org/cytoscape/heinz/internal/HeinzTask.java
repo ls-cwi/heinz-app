@@ -98,9 +98,9 @@ public class HeinzTask extends AbstractNetworkTask {
 		HeinzClient client = new SwHeinzClient(serverHost, serverPort);
 		
 		taskMonitor.setStatusMessage("Sending node table to Heinz");
-		// TODO
-		// Use `network.getDefaultNodeTable()` for a table containing both
-		// local values and ones shared across multiple subnetworks
+		client.sendNodeTable(
+				network.getDefaultNodeTable(),
+				pValueColumnName.getSelectedValue());
 		taskMonitor.setProgress(0.06);
 		
 		taskMonitor.setStatusMessage("Sending edge table to Heinz");

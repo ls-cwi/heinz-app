@@ -1,9 +1,14 @@
 package org.cytoscape.heinz.internal;
 
+import java.io.ByteArrayOutputStream;
+import java.io.PrintWriter;
 import java.io.IOException;
 import java.net.UnknownHostException;
+import java.util.Locale;
 
 import org.cytoscape.model.CyTable;
+import org.cytoscape.model.CyRow;
+
 
 /**
  * Communicates with Heinz via a simple client-server protocol.
@@ -37,9 +42,43 @@ public class SwHeinzClient extends SwClient implements HeinzClient {
      * {@inheritDoc}
      */
 	@Override
-	public void sendNodeTable(CyTable nodeTable, String pValueColumnName)
-			throws IOException {
-		// TODO Auto-generated method stub
+	public void sendNodeTable(
+			final CyTable nodeTable,
+			final String pValueColumnName)
+					throws IOException {
+		
+		// find the name and type of the table’s primary key column
+		String pkColumnName = nodeTable.getPrimaryKey().getName();
+		Class<?> pkColumnType = nodeTable.getPrimaryKey().getType();
+		
+		// make an object to build up a byte array in a growing buffer
+		ByteArrayOutputStream fileContents = new ByteArrayOutputStream();
+		// an object to write text to the ByteArrayOutputStream
+		PrintWriter writer = new PrintWriter(fileContents, true);
+		
+		// start the file with a commented header line
+		writer.format("#node\tpval\n");
+		for (CyRow node : nodeTable.getAllRows()) {
+			// write the line for this node table row to the byte array
+			writer.format(
+					(Locale) null,
+					"%s\t%g\n",
+					node.get(pkColumnName, pkColumnType),
+					node.get(pValueColumnName, Double.class));
+		}
+		
+		// send the file to the server as the payload of a message
+		new ClientMessage(
+				ClientMessage.TYPE_INPUT_FILE,
+				"-n",
+				fileContents.toByteArray()).send(outputStream);
+		
+		ServerMessage response = ServerMessage.receive(inputStream);
+		if (!(
+				response.getType() ==	ServerMessage.TYPE_ACK &&
+				response.getPayload().length == 0)) {
+			throw new IOException("Invalid response from server.");
+		}
 		
 	}
 	
