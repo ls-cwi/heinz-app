@@ -84,4 +84,11 @@ public interface HeinzClient {
 	public void retrieveResults(CyTable nodeTable, String resultColumnName)
 			throws IOException, IllegalArgumentException;
 	
+	/**
+	 * End the connection (if applicable) after the run is over.
+	 * 
+	 * @throws IOException  if an I/O error occurs
+	 */
+	public void close() throws IOException;
+	
 }

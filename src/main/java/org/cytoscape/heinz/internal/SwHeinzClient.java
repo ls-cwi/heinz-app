@@ -139,4 +139,13 @@ public class SwHeinzClient extends AbstractSwClient implements HeinzClient {
 		
 	}
 	
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void close() throws IOException {
+		// TODO Auto-generated method stub
+		
+	}
+	
 }
