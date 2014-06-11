@@ -255,6 +255,17 @@ public abstract class AbstractSwClient {
 	public void ping() throws IOException {
 		new ClientMessage(
 				ClientMessage.TYPE_ALIVE, null, null).send(outputStream);
+		receiveAck();
+	}
+	/**
+	 * Try to read an acknowledgement message from the server.
+	 * 
+	 * Blocking until the server responds with an ACK to signify that
+	 * it has handled the last client message.
+	 * 
+	 * @throws IOException  if receiving something else or nothing at all.
+	 */
+	protected void receiveAck() throws IOException {
 		ServerMessage response = ServerMessage.receive(inputStream);	
 		if (!(
 				response.getType() ==	ServerMessage.TYPE_ACK &&

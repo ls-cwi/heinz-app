@@ -72,13 +72,7 @@ public class SwHeinzClient extends AbstractSwClient implements HeinzClient {
 				ClientMessage.TYPE_INPUT_FILE,
 				"-n",
 				fileContents.toByteArray()).send(outputStream);
-		
-		ServerMessage response = ServerMessage.receive(inputStream);
-		if (!(
-				response.getType() ==	ServerMessage.TYPE_ACK &&
-				response.getPayload().length == 0)) {
-			throw new IOException("Invalid response from server.");
-		}
+		receiveAck();
 		
 	}
 	
