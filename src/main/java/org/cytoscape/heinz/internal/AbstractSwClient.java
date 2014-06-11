@@ -252,7 +252,7 @@ public abstract class AbstractSwClient {
 	 * 
 	 * @throws IOException  if the server does not respond as expected
 	 */
-	public void ping() throws IOException {
+	protected void ping() throws IOException {
 		new ClientMessage(
 				ClientMessage.TYPE_ALIVE, null, null).send(outputStream);
 		receiveAck();

@@ -38,6 +38,14 @@ public class SwHeinzClient extends AbstractSwClient implements HeinzClient {
 				ClientMessage.TYPE_OUTPUT_FILE, "-o", null).send(outputStream);
 	}
 	
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void ping() throws IOException {
+		super.ping();
+	}
+	
     /**
      * {@inheritDoc}
      */
