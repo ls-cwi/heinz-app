@@ -9,6 +9,7 @@ import org.cytoscape.task.AbstractNetworkTask;
 import org.cytoscape.model.CyNetwork;
 import org.cytoscape.model.CyColumn;
 import org.cytoscape.model.CyRow;
+import org.cytoscape.model.CyNode;
 import org.cytoscape.work.TaskMonitor;
 import org.cytoscape.work.Tunable;
 import org.cytoscape.work.util.ListSingleSelection;
@@ -37,6 +38,8 @@ public class HeinzTask extends AbstractNetworkTask {
 	public String serverHost = "localhost";
 	@Tunable(description="Port", groups={"Server details"})
 	public int serverPort = 9000;
+	@Tunable(description="Output column name")
+	public String resultColumnName = "inHeinzModule";
 
 	/**
 	 * Initialise the task, getting a CyNetwork. 
@@ -73,7 +76,7 @@ public class HeinzTask extends AbstractNetworkTask {
 		// cancel(), and calling a cleanup method
 		
 		// Give the task a title (shown in status monitor)
-		taskMonitor.setTitle("Running Heinz.");
+		taskMonitor.setTitle("Heinz");
 		
 		taskMonitor.setStatusMessage("Validating parameters");
 		// Check if the p-value column consists of numbers between 0 and 1
@@ -97,28 +100,36 @@ public class HeinzTask extends AbstractNetworkTask {
 		taskMonitor.setStatusMessage("Connecting to the Heinz server");
 		HeinzClient client = new SwHeinzClient(serverHost, serverPort);
 		
-		taskMonitor.setStatusMessage("Sending node table to Heinz");
-		client.sendNodeTable(
-				network.getDefaultNodeTable(),
-				pValueColumnName.getSelectedValue());
-		taskMonitor.setProgress(0.06);
-		
-		taskMonitor.setStatusMessage("Sending edge table to Heinz");
-		// TODO
-		taskMonitor.setProgress(0.10);
-		
-		taskMonitor.setStatusMessage("Running Heinz");
-		// TODO
-		taskMonitor.setProgress(0.95);
-		
-		taskMonitor.setStatusMessage("Reading results into node table");
-		// TODO
-		// 
-		// use `network.getTable(CyNode.class, CyNetwork.LOCAL_ATTRS)` for
-		// the table local to this subnetwork, or
-		// network.getTable(CyNode.class, CyRootNetwork.SHARED_ATTRS) for
-		// the ones shared across the root network
-		taskMonitor.setProgress(1.00);
+		try {
+			taskMonitor.setStatusMessage("Sending parameters to Heinz");
+			client.sendLambda(lambda.getValue());
+			client.sendA(a.getValue());
+			client.sendFdr(fdr.getValue());
+
+			taskMonitor.setStatusMessage("Sending node table to Heinz");
+			client.sendNodeTable(
+					network.getDefaultNodeTable(),
+					pValueColumnName.getSelectedValue());
+			taskMonitor.setProgress(0.06);
+
+			taskMonitor.setStatusMessage("Sending edge table to Heinz");
+			client.sendEdgeTable(network.getDefaultEdgeTable());
+			taskMonitor.setProgress(0.10);
+
+			taskMonitor.setStatusMessage("Running Heinz");
+			client.runHeinz();
+			taskMonitor.setProgress(0.95);
+
+			taskMonitor.setStatusMessage("Reading results into node table");
+			// this writes to the local node table, specific to this subnetwork
+			client.retrieveResults(
+					network.getTable(CyNode.class, CyNetwork.LOCAL_ATTRS),
+					resultColumnName);
+			taskMonitor.setProgress(1.00);
+			
+		} finally {
+			client.close();
+		}
 		
 	}
 }
