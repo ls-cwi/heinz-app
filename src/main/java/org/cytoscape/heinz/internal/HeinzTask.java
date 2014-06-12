@@ -79,6 +79,10 @@ public class HeinzTask extends AbstractNetworkTask {
 		taskMonitor.setTitle("Heinz");
 		
 		taskMonitor.setStatusMessage("Validating parameters");
+		// Check if a p-value column has been set
+		if (pValueColumnName.getSelectedValue() == null) {
+			throw new IllegalArgumentException("No p-value column selected.");
+		}
 		// Check if the p-value column consists of numbers between 0 and 1
 		for (CyRow row : network.getDefaultNodeTable().getAllRows()) {
 			if (!row.isSet(pValueColumnName.getSelectedValue())) {
