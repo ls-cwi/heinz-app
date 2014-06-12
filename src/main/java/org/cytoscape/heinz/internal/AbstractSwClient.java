@@ -257,6 +257,7 @@ public abstract class AbstractSwClient {
 				ClientMessage.TYPE_ALIVE, null, null).send(outputStream);
 		receiveAck();
 	}
+	
 	/**
 	 * Try to read an acknowledgement message from the server.
 	 * 
@@ -273,4 +274,14 @@ public abstract class AbstractSwClient {
 			throw new IOException("Invalid response from server.");
 		}
 	}
+	
+	/**
+	 * Close the connection, releasing system resources (the port).
+	 * 
+	 * @throws IOException  if I/O errors occur, e.g. the connection is busy
+	 */
+	protected void close() throws IOException {
+		socket.close();
+	}
+	
 }

@@ -144,8 +144,7 @@ public class SwHeinzClient extends AbstractSwClient implements HeinzClient {
 	 */
 	@Override
 	public void close() throws IOException {
-		// TODO Auto-generated method stub
-		
+		super.close();
 	}
 	
 }
