@@ -57,9 +57,15 @@ public class SwHeinzClient extends AbstractSwClient implements HeinzClient {
 			final String pValueColumnName)
 					throws IOException {
 		
-		// find the name and type of the table’s primary key column
-		String pkColumnName = nodeTable.getPrimaryKey().getName();
-		Class<?> pkColumnType = nodeTable.getPrimaryKey().getType();
+		// Check if the table has the node SUIDs as its primary key column
+		if (
+				nodeTable.getPrimaryKey().getName() != "SUID" ||
+				nodeTable.getPrimaryKey().getType() != Long.class) {
+			throw new IllegalArgumentException(
+					"Primary key of node table (" +
+					nodeTable.getPrimaryKey().getName() +
+					") is not the SUID.");
+		}
 		
 		// make an object to build up a byte array in a growing buffer
 		ByteArrayOutputStream fileContents = new ByteArrayOutputStream();
@@ -68,13 +74,14 @@ public class SwHeinzClient extends AbstractSwClient implements HeinzClient {
 		
 		// start the file with a commented header line
 		writer.format("#node\tpval\n");
-		for (CyRow node : nodeTable.getAllRows()) {
+		// for each row in the node table
+		for (CyRow nodeRow : nodeTable.getAllRows()) {
 			// write the line for this node table row to the byte array
 			writer.format(
 					(Locale) null,
-					"%s\t%g\n",
-					node.get(pkColumnName, pkColumnType),
-					node.get(pValueColumnName, Double.class));
+					"%d\t%g\n",
+					nodeRow.get("SUID", Long.class),
+					nodeRow.get(pValueColumnName, Double.class));
 		}
 		
 		// send the file to the server as the payload of a message
