@@ -4,10 +4,12 @@ import java.io.ByteArrayOutputStream;
 import java.io.PrintWriter;
 import java.io.IOException;
 import java.net.UnknownHostException;
+import java.util.List;
 import java.util.Locale;
 
 import org.cytoscape.model.CyTable;
 import org.cytoscape.model.CyRow;
+import org.cytoscape.model.CyEdge;
 
 
 /**
@@ -88,8 +90,31 @@ public class SwHeinzClient extends AbstractSwClient implements HeinzClient {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public void sendEdgeTable(CyTable edgeTable) throws IOException {
-		// TODO Auto-generated method stub
+	public void sendEdgeTable(List<CyEdge> edgeList) throws IOException {
+		
+		// make an object to build up a byte array in a growing buffer
+		ByteArrayOutputStream fileContents = new ByteArrayOutputStream();
+		// an object to write text to the ByteArrayOutputStream
+		PrintWriter writer = new PrintWriter(fileContents, true);
+		
+		// start the file with a commented header line
+		writer.format("#source\ttarget\n");
+		// for each edge
+		for (CyEdge edge : edgeList) {
+			// write the line for this node table row to the byte array
+			writer.format(
+					(Locale) null,
+					"%d\t%d\n",
+					edge.getSource().getSUID(),
+					edge.getTarget().getSUID());
+		}
+		
+		// send the file to the server as the payload of a message
+		new ClientMessage(
+				ClientMessage.TYPE_INPUT_FILE,
+				"-e",
+				fileContents.toByteArray()).send(outputStream);
+		receiveAck();
 		
 	}
 	
