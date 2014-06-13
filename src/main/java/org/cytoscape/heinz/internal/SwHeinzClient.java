@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.net.UnknownHostException;
 import java.util.List;
 import java.util.Locale;
+import java.nio.charset.Charset;
 
 import org.cytoscape.model.CyTable;
 import org.cytoscape.model.CyRow;
@@ -130,8 +131,12 @@ public class SwHeinzClient extends AbstractSwClient implements HeinzClient {
 	 */
 	@Override
 	public void sendLambda(double lambda) throws IOException {
-		// TODO Auto-generated method stub
-		
+		new ClientMessage(
+				ClientMessage.TYPE_PARAMETER,
+				"-lambda",
+				((Double) lambda).toString().getBytes(
+						Charset.forName("US-ASCII"))).send(outputStream);
+		receiveAck();
 	}
 	
 	/**
@@ -139,8 +144,12 @@ public class SwHeinzClient extends AbstractSwClient implements HeinzClient {
 	 */
 	@Override
 	public void sendA(double a) throws IOException {
-		// TODO Auto-generated method stub
-		
+		new ClientMessage(
+				ClientMessage.TYPE_PARAMETER,
+				"-a",
+				((Double) a).toString().getBytes(
+						Charset.forName("US-ASCII"))).send(outputStream);
+		receiveAck();
 	}
 	
 	/**
@@ -148,8 +157,12 @@ public class SwHeinzClient extends AbstractSwClient implements HeinzClient {
 	 */
 	@Override
 	public void sendFdr(double fdr) throws IOException {
-		// TODO Auto-generated method stub
-		
+		new ClientMessage(
+				ClientMessage.TYPE_PARAMETER,
+				"-FDR",
+				((Double) fdr).toString().getBytes(
+						Charset.forName("US-ASCII"))).send(outputStream);
+		receiveAck();
 	}
 	
 	/**
