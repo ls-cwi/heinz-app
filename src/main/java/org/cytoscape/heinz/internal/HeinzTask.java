@@ -117,7 +117,7 @@ public class HeinzTask extends AbstractNetworkTask {
 			taskMonitor.setProgress(0.06);
 
 			taskMonitor.setStatusMessage("Sending edge table to Heinz");
-			client.sendEdgeTable(network.getDefaultEdgeTable());
+			client.sendEdgeTable(network.getEdgeList());
 			taskMonitor.setProgress(0.10);
 
 			taskMonitor.setStatusMessage("Running Heinz");
