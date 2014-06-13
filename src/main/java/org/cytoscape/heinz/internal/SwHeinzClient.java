@@ -147,7 +147,7 @@ public class SwHeinzClient extends AbstractSwClient implements HeinzClient {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public void sendFdr(double fdr) {
+	public void sendFdr(double fdr) throws IOException {
 		// TODO Auto-generated method stub
 		
 	}

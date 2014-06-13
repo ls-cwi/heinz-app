@@ -57,9 +57,9 @@ public interface HeinzClient {
 	/**
 	 * Set/write the false discovery rate for the Heinz run.
 	 * 
-	 * @param fdr  the FDR parameter 
+	 * @param fdr  the FDR parameter
 	 */
-	public void sendFdr(double fdr);
+	public void sendFdr(double fdr) throws IOException;
 	
 	/**
 	 * Run Heinz with the parameters set beforehand.
