@@ -36,9 +36,11 @@ public class SwHeinzClient extends AbstractSwClient implements HeinzClient {
 		// enable pre-processing, as will likely be the default in the future
 		new ClientMessage(
 				ClientMessage.TYPE_PARAMETER, "-p", null).send(outputStream);
+		receiveAck();
 		// ask the server to prepare for storing the Heinz output file
 		new ClientMessage(
 				ClientMessage.TYPE_OUTPUT_FILE, "-o", null).send(outputStream);
+		receiveAck();
 	}
 	
 	/**
