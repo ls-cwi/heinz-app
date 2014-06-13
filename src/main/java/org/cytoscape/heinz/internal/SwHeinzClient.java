@@ -172,8 +172,11 @@ public class SwHeinzClient extends AbstractSwClient implements HeinzClient {
 	 */
 	@Override
 	public void runHeinz() throws IOException {
-		// TODO Auto-generated method stub
-		
+		new ClientMessage(
+				ClientMessage.TYPE_RUN,
+				null,
+				null).send(outputStream);
+		receiveAck();
 	}
 	
 	/**
