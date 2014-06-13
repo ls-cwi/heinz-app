@@ -191,11 +191,22 @@ public abstract class AbstractSwClient {
 			int payloadLength = dataStream.readInt();
 			// create a byte array to store the payload
 			byte[] payload = new byte[payloadLength];
-			// try to fill the byte array and record the number of bytes
-			// actually read
-			int payloadBytesRead = dataStream.read(payload);
-			if (payloadBytesRead != payloadLength) {
-				throw new EOFException("Incomplete response from server.");
+			// how many bytes of the payload have been read so far
+			int payloadBytesRead = 0;
+			// until all expected bytes are read
+			while (payloadBytesRead < payloadLength) {
+				// read up to `payloadLength - payloadBytesRead` bytes into
+				// the byte array, starting at `payload[payloadBytesRead]`. In
+				// other words, read the next part of the payload.
+				int newBytesRead = dataStream.read(
+						payload,
+						payloadBytesRead,
+						payloadLength - payloadBytesRead);
+				// if the end of the stream was encountered while reading
+				if (newBytesRead == -1) {
+					throw new EOFException("Incomplete response from server.");
+				}
+				payloadBytesRead += newBytesRead;
 			}
 			return new ServerMessage(type, payload);
 		}
