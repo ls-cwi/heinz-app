@@ -13,11 +13,9 @@ It is currently still in an early stage of development.
 Authors
 -------
 
-Fedde Schaeffer
-
-Mohammed El-Kebir
-
-Gunnar W. Klau
+- Fedde Schaeffer
+- Mohammed El-Kebir
+- Gunnar W. Klau
 
 Installation
 ------------
