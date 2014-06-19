@@ -39,7 +39,7 @@ public class HeinzTask extends AbstractNetworkTask {
 	@Tunable(description="Port", groups={"Server details"})
 	public int serverPort = 9000;
 	@Tunable(description="Output column name")
-	public String resultColumnName = "inHeinzModule";
+	public String resultColumnName = "in Heinz module";
 
 	/**
 	 * Initialise the task, getting a CyNetwork. 
