@@ -14,7 +14,9 @@ Authors
 -------
 
 Fedde Schaeffer
+
 Mohammed El-Kebir
+
 Gunnar W. Klau
 
 Installation
