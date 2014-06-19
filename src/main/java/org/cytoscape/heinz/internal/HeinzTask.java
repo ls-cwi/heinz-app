@@ -72,9 +72,6 @@ public class HeinzTask extends AbstractNetworkTask {
 	public void run(final TaskMonitor taskMonitor)
 			throws IOException {
 		
-		// TODO handle cancellation using if(cancelled) or overriding
-		// cancel(), and calling a cleanup method
-		
 		// Give the task a title (shown in status monitor)
 		taskMonitor.setTitle("Heinz");
 		
@@ -101,28 +98,47 @@ public class HeinzTask extends AbstractNetworkTask {
 		}
 		taskMonitor.setProgress(0.02);
 		
+		// stop if Cancel was clicked
+		if (cancelled) { return; }
+		
 		taskMonitor.setStatusMessage("Connecting to the Heinz server");
 		HeinzClient client = new SwHeinzClient(serverHost, serverPort);
 		
 		try {
+			
+			// skip to `finally` and stop if Cancel was clicked
+			if (cancelled) { return; }
+			
 			taskMonitor.setStatusMessage("Sending parameters to Heinz");
 			client.sendLambda(lambda.getValue());
 			client.sendA(a.getValue());
 			client.sendFdr(fdr.getValue());
+			
+			// skip to `finally` and stop if Cancel was clicked
+			if (cancelled) { return; }
 
 			taskMonitor.setStatusMessage("Sending node table to Heinz");
 			client.sendNodeTable(
 					network.getDefaultNodeTable(),
 					pValueColumnName.getSelectedValue());
 			taskMonitor.setProgress(0.06);
-
+			
+			// skip to `finally` and stop if Cancel was clicked
+			if (cancelled) { return; }
+			
 			taskMonitor.setStatusMessage("Sending edge table to Heinz");
 			client.sendEdgeTable(network.getEdgeList());
 			taskMonitor.setProgress(0.10);
+			
+			// skip to `finally` and stop if Cancel was clicked
+			if (cancelled) { return; }
 
 			taskMonitor.setStatusMessage("Running Heinz");
 			client.runHeinz();
 			taskMonitor.setProgress(0.95);
+			
+			// skip to `finally` and stop if Cancel was clicked
+			if (cancelled) { return; }
 
 			taskMonitor.setStatusMessage("Reading results into node table");
 			// this writes to the local node table, specific to this subnetwork
