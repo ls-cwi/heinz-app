@@ -85,7 +85,7 @@ public class SwHeinzClient extends AbstractSwClient implements HeinzClient {
 			// write the line for this node table row to the byte array
 			writer.format(
 					(Locale) null,
-					"%d\t%g\n",
+					"%d\t%.15g\n",
 					nodeRow.get("SUID", Long.class),
 					nodeRow.get(pValueColumnName, Double.class));
 		}
