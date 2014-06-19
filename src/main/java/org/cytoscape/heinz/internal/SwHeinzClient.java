@@ -33,17 +33,27 @@ public class SwHeinzClient extends AbstractSwClient implements HeinzClient {
 	public SwHeinzClient(String host, int port) throws
 			IOException, UnknownHostException {
 		
-		// open a connection to the server
+		// open a connection to the server,
+		// and set outputStream an inputStream
 		super(host, port);
 		
-		// enable pre-processing, as will likely be the default in the future
-		new ClientMessage(
-				ClientMessage.TYPE_PARAMETER, "-p", null).send(outputStream);
-		receiveAck();
-		// ask the server to prepare for storing the Heinz output file
-		new ClientMessage(
-				ClientMessage.TYPE_OUTPUT_FILE, "-o", null).send(outputStream);
-		receiveAck();
+		try {
+			// enable pre-processing, as will likely be the default in the future
+			new ClientMessage(
+					ClientMessage.TYPE_PARAMETER, "-p", null).send(outputStream);
+			receiveAck();
+			// ask the server to prepare for storing the Heinz output file
+			new ClientMessage(
+					ClientMessage.TYPE_OUTPUT_FILE, "-o", null).send(outputStream);
+			receiveAck();
+		// if something went wrong sending the parameters 
+		} catch (IOException e) {
+			// close the connection
+			close();
+			// and let the exception propagate to the caller
+			throw e;
+		}
+		
 	}
 	
 	/**
