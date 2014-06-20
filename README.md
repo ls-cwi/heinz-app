@@ -20,11 +20,13 @@ Authors
 Installation
 ------------
 
-The app is packaged using [Maven](https://maven.apache.org/). If Maven is
-installed, the app can be built from source by downloading (or cloning)
-the package, opening a terminal in the root directory of the package,
-and executing the command `mvn install`. Maven will then create a JAR
-file named heinz-cytoscape-app-*version*.jar in the `target/` directory.
+The app is packaged using [Maven](https://maven.apache.org/). If
+Maven is installed, the app can be built from source by 
+downloading (or cloning) the package from [the code repository
+on GitHub](https://github.com/ls-cwi/heinz-app), opening a
+terminal in the root directory of the package, and executing the
+command `mvn install`. Maven will then create a JAR file named
+heinz-cytoscape-app-*version*.jar in the `target/` directory.
 
 Once the app is built, it can be installed into Cytoscape simply by moving or
 copying the JAR file into the `$HOME/CytoscapeConfiguration/3/apps/installed/`
