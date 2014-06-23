@@ -1,5 +1,5 @@
-heinz-cytoscape-app 0.1.0
-=========================
+heinz-cytoscape-app
+===================
 
 This is a Cytoscape 3.x app (plugin) for discovery of subnetwork modules of differentially
 expressed genes in interaction networks. It provides an interface to the tool [Heinz](https://software.cwi.nl/heinz),
