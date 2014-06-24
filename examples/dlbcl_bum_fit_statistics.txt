@@ -1,0 +1,7 @@
+Beta-Uniform-Mixture (BUM) model
+
+2559 pvalues fitted
+
+Mixture parameter (lambda):     0.527
+shape parameter (a):            0.267
+log-likelihood:                 1299.6

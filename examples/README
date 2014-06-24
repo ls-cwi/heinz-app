@@ -1,0 +1,4 @@
+These files are adapted from the diffuse large B-cell lymphoma dataset
+used in the tutorial of the R Bioconductor package ‘BioNet’. See
+http://www.bioconductor.org/packages/2.14/bioc/html/BioNet.html and
+http://www.bioconductor.org/packages/2.14/data/experiment/html/DLBCL.html.
