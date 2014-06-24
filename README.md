@@ -35,14 +35,17 @@ directory. It should then appear in the *Apps* menu in Cytoscape.
 Running the server
 ------------------
 
-The app needs to contact a server to run Heinz. This server can be run locally, requiring Heinz (see https://software.cwi.nl/heinz) and an interpreter for the Python programming language (version 2.x, see https://www.python.org/) to be installed.  The server wrapper can then be downloaded (or cloned) from https://github.com/melkebir/server-wrapper, and run using commands such as the following:
+The app needs to contact a server to run Heinz. This server can be
+run locally, requiring Heinz (see https://software.cwi.nl/heinz) and
+an interpreter for the Python programming language (version 2.x, see
+https://www.python.org/) to be installed.  The server wrapper can then be
+downloaded (or cloned) from https://github.com/melkebir/server-wrapper,
+and run using commands such as the following:
 
 ```
-mkdir /tmp/heinz
-python src/server.py 9000 1 /tmp/heinz /path/to/heinz
+python src/server.py 9000 1 /path/to/heinz
 ```
 
 Where 9000 is the port to accept connections on, 1 is the maximum number
-of Heinz runs to accept simultaneously, /tmp/heinz is the directory to
-store temporary files in and /path/to/heinz is the path to the binary
-executable of Heinz.
+of Heinz runs to accept simultaneously, and /path/to/heinz is the path
+to the binary executable of Heinz.
