@@ -40,7 +40,7 @@ run locally, requiring Heinz (see https://software.cwi.nl/heinz) and
 an interpreter for the Python programming language (version 2.x, see
 https://www.python.org/) to be installed.  The server wrapper can then be
 downloaded (or cloned) from https://github.com/melkebir/server-wrapper,
-and run using commands such as the following:
+and run using a command such as the following:
 
 ```
 python src/server.py 9000 1 /path/to/heinz
