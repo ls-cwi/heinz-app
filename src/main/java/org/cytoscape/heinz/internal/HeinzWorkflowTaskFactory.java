@@ -8,7 +8,7 @@ import org.cytoscape.work.TaskIterator;
 /**
  * TaskFactory for HeinzTask, to be provided as an OSGi service.
  */
-public class HeinzTaskFactory extends AbstractNetworkTaskFactory {
+public class HeinzWorkflowTaskFactory extends AbstractNetworkTaskFactory {
 
 	/**
 	 * Create a TaskIterator with a new HeinzTask.
@@ -19,7 +19,12 @@ public class HeinzTaskFactory extends AbstractNetworkTaskFactory {
 	 * already called the setNetwork() method.
 	 */
 	public TaskIterator createTaskIterator(CyNetwork network) {
-		return new TaskIterator(new HeinzTask(network));
+		return new TaskIterator(
+				new BumFittingTask(
+						network.getDefaultNodeTable(),
+						network.getTable(
+								CyNetwork.class,
+								CyNetwork.LOCAL_ATTRS)),
+				new HeinzTask(network));
 	}
 }
-
