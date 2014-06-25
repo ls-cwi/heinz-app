@@ -20,7 +20,7 @@ public class CyActivator extends AbstractCyActivator {
 	@Override
 	public void start(BundleContext context) throws Exception {
 		
-		HeinzTaskFactory taskFactory = new HeinzTaskFactory();
+		HeinzWorkflowTaskFactory taskFactory = new HeinzWorkflowTaskFactory();
 		
 		Properties properties = new Properties();
 		properties.put(TITLE, "Run Heinz");
