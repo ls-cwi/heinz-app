@@ -1,68 +1,72 @@
 package org.cytoscape.heinz.internal;
 
 
-import java.util.List;
-import java.util.ArrayList;
 import java.io.IOException;
 
 import org.cytoscape.task.AbstractNetworkTask;
+import org.cytoscape.work.TaskMonitor;
 import org.cytoscape.model.CyNetwork;
-import org.cytoscape.model.CyColumn;
 import org.cytoscape.model.CyRow;
 import org.cytoscape.model.CyNode;
-import org.cytoscape.work.TaskMonitor;
-import org.cytoscape.work.Tunable;
-import org.cytoscape.work.util.ListSingleSelection;
-import org.cytoscape.work.util.BoundedDouble;
 
 
 /**
  * Task that runs Heinz and adds a column to the network’s node table.
  */
 public class HeinzTask extends AbstractNetworkTask {
-
-	// Tunable parameters to be provided by the user before run() is called
-	@Tunable(
-			description="Mixture parameter (λ)",
-			groups={"BUM model parameters"})
-	public BoundedDouble lambda = new BoundedDouble(0.0, 0.5, 1.0, true, true);
-	@Tunable(
-			description="Shape parameter (a)",
-			groups={"BUM model parameters"})
-	public BoundedDouble a = new BoundedDouble(0.0, 0.25, 1.0, true, true);
-	@Tunable(description="Node table column with p-values")
-	public ListSingleSelection<String> pValueColumnName;
-	@Tunable(description="False-discovery rate")
-	public BoundedDouble fdr = new BoundedDouble(0.0, 0.01,	1.0, true, true);
-	@Tunable(description="Host", groups={"Server details"})
-	public String serverHost = "localhost";
-	@Tunable(description="Port", groups={"Server details"})
-	public int serverPort = 9000;
-	@Tunable(description="Output column name")
-	public String resultColumnName = "in Heinz module";
-
+	
+	private final String pValueColumnName;
+	private final String resultColumnName;
+	private final double fdr;
+	private final String serverHost;
+	private final int serverPort;
+	private Double lambda = null;
+	private Double a = null;
+	
 	/**
-	 * Initialise the task, getting a CyNetwork. 
+	 * Initialise the task, setting the required parameters as fields.
 	 * 
-	 * @param n  the network to operate on
+	 * @param network  the CyNetwork to detect a module in
+	 * @param pValueColumnName  the node table column holding the p-values
+	 * @param resultColumnName  the node table column to write the results to
+	 * @param fdr  the false discovery rate
+	 * @param lambda  the BUM model mixture parameter or null
+	 * @param a  the BUM model shape parameter or null
+	 * @param serverHost  the host name of the Heinz server
+	 * @param serverPort  the port number of the Heinz server
 	 */
-	public HeinzTask(final CyNetwork n) {
-		
-		// Will set a CyNetwork field called "network"
-		super(n);
-		
-		// Collect the names of the node table columns that have the type Double
-		List<String> doubleColumnNameList = new ArrayList<String>();
-		for (CyColumn column : network.getDefaultNodeTable().getColumns()) {
-			if (column.getType() == Double.class) {
-				doubleColumnNameList.add(column.getName());
-			}
+	public HeinzTask(
+			CyNetwork network,
+			String pValueColumnName,
+			String resultColumnName,
+			double fdr,
+			Double lambda,
+			Double a,
+			String serverHost,
+			int serverPort) {
+		// The superclass constructor will set the network field
+		super(network);
+		if (pValueColumnName == null) {
+			throw new IllegalArgumentException(
+					"No p-value column name.");
 		}
-		// Set the column names as options in the Tunable
-		pValueColumnName = new ListSingleSelection<String>(doubleColumnNameList);
-		
+		this.pValueColumnName = pValueColumnName;
+		if (resultColumnName == null) {
+			throw new IllegalArgumentException(
+					"No Heinz result column name.");
+		}
+		this.resultColumnName = resultColumnName;
+		if (!(fdr > 0.0 && fdr < 1.0)) {
+			throw new IllegalArgumentException(
+					"FDR parameter out of range.");
+		}
+		this.fdr = fdr;
+		this.lambda = lambda;
+		this.a = a;
+		this.serverHost = serverHost;
+		this.serverPort = serverPort;
 	}
-
+	
     /**
      * Run Heinz and add a column to the node table.
      * 
@@ -76,20 +80,16 @@ public class HeinzTask extends AbstractNetworkTask {
 		taskMonitor.setTitle("Heinz");
 		
 		taskMonitor.setStatusMessage("Validating parameters");
-		// Check if a p-value column has been set
-		if (pValueColumnName.getSelectedValue() == null) {
-			throw new IllegalArgumentException("No p-value column selected.");
-		}
 		// Check if the p-value column consists of numbers between 0 and 1
 		for (CyRow row : network.getDefaultNodeTable().getAllRows()) {
-			if (!row.isSet(pValueColumnName.getSelectedValue())) {
+			if (!row.isSet(pValueColumnName)) {
 				throw new IllegalArgumentException(
 						"p-value for node ‘" +
 						row.get(CyNetwork.NAME, String.class) +
 						"’ missing.");
 			}
-			double pValue =  row.get(pValueColumnName.getSelectedValue(), Double.class);
-			if (pValue < 0.0 || pValue > 1.0) {
+			double pValue =  row.get(pValueColumnName, Double.class);
+			if (!(pValue > 0.0 && pValue < 1.0)) {
 				throw new IllegalArgumentException(
 						"Invalid p-value for node ‘" +
 						row.get(CyNetwork.NAME, String.class) +
@@ -110,9 +110,9 @@ public class HeinzTask extends AbstractNetworkTask {
 			if (cancelled) { return; }
 			
 			taskMonitor.setStatusMessage("Sending parameters to Heinz");
-			client.sendLambda(lambda.getValue());
-			client.sendA(a.getValue());
-			client.sendFdr(fdr.getValue());
+			client.sendLambda(lambda);
+			client.sendA(a);
+			client.sendFdr(fdr);
 			
 			// skip to `finally` and stop if Cancel was clicked
 			if (cancelled) { return; }
@@ -120,7 +120,7 @@ public class HeinzTask extends AbstractNetworkTask {
 			taskMonitor.setStatusMessage("Sending node table to Heinz");
 			client.sendNodeTable(
 					network.getDefaultNodeTable(),
-					pValueColumnName.getSelectedValue());
+					pValueColumnName);
 			taskMonitor.setProgress(0.06);
 			
 			// skip to `finally` and stop if Cancel was clicked

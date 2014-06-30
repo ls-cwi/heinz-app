@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.ArrayList;
 import java.io.IOException;
 
-import org.cytoscape.work.AbstractTask;
+import org.cytoscape.task.AbstractTableColumnTask;
 import org.cytoscape.work.TaskMonitor;
 import org.cytoscape.work.Tunable;
 import org.cytoscape.work.util.ListSingleSelection;
@@ -20,43 +20,38 @@ import org.cytoscape.model.CyRow;
  * The estimated parameters (lambda and a) are saved as columns in
  * the network table.
  */
-public class BumFittingTask extends AbstractTask {
+public class BumFittingTask extends AbstractTableColumnTask {
 	
-	private final CyTable nodeTable;
 	private final CyTable networkTable;
+	private final String serverHost;
+	private final int serverPort;
 	
-	@Tunable(description="Fit BUM model parameters for network")
-	public boolean fitBum = true;
-	@Tunable(description="Node table column holding the p-values",
-			 dependsOn="fitBum=true")
-	public ListSingleSelection<String> pValueColumnName;
-	@Tunable(description="Generate plots to evaluate the fit",
-			 dependsOn="fitBum=true")
+	@Tunable(description="Generate plots to evaluate the fit")
 	public boolean showPlots = true;
 	
 	/**
-	 * Initialise the task, getting the required tables.
+	 * Initialise the task, obtaining required parameters.
+	 * 
+	 * @param pValueColumn  node table column holding the p-values to fit to
+	 * @param networkTable  network table to write the results to
+	 * @param serverHost  the host name of the model fitting server
+	 * @param serverPort  the port number of the model fitting server
 	 */
     public BumFittingTask(
-    		CyTable nodeTable,
-    		CyTable networkTable) {
-    	
-    	// link to the TaskIterator
-    	super();
-    	
-    	// set the tables as fields
-    	this.nodeTable = nodeTable;
-    	this.networkTable = networkTable;
-    	
-    	// Collect the names of the node table columns that have the type Double
-    	List<String> doubleColumnNameList = new ArrayList<String>();
-    	for (CyColumn column : nodeTable.getColumns()) {
-    		if (column.getType() == Double.class) {
-    			doubleColumnNameList.add(column.getName());
-    		}
+    		CyColumn pValueColumn,
+    		CyTable networkTable,
+    		String serverHost,
+    		int serverPort) {
+    	// set the `column' field
+    	super(pValueColumn);
+    	// set the other parameters as fields
+    	if (networkTable == null) {
+    		throw new IllegalArgumentException(
+    				"No network table to write the BUM parameters to.");
     	}
-    	// Set the column names as options in the Tunable
-    	pValueColumnName = new ListSingleSelection<String>(doubleColumnNameList);
+    	this.networkTable = networkTable;
+    	this.serverHost = serverHost;
+    	this.serverPort = serverPort;	
     }
 
 	/**
@@ -70,24 +65,6 @@ public class BumFittingTask extends AbstractTask {
 		
 		// Give the task a title (shown in status monitor)
 		taskMonitor.setTitle("BUM Model Fitting");
-		
-		
-		// Check if the p-value column consists of numbers between 0 and 1
-		for (CyRow row : nodeTable.getAllRows()) {
-			if (!row.isSet(pValueColumnName.getSelectedValue())) {
-				throw new IllegalArgumentException(
-						"p-value for node ‘" +
-						row.get("name", String.class) +
-						"’ missing.");
-			}
-			double pValue =  row.get(pValueColumnName.getSelectedValue(), Double.class);
-			if (pValue < 0.0 || pValue > 1.0) {
-				throw new IllegalArgumentException(
-						"Invalid p-value for node ‘" +
-						row.get("name", String.class) +
-						"’.");
-			}
-		}
 		
 		//TODO
 		

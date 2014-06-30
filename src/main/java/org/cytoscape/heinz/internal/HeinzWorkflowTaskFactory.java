@@ -19,12 +19,6 @@ public class HeinzWorkflowTaskFactory extends AbstractNetworkTaskFactory {
 	 * already called the setNetwork() method.
 	 */
 	public TaskIterator createTaskIterator(CyNetwork network) {
-		return new TaskIterator(
-				new BumFittingTask(
-						network.getDefaultNodeTable(),
-						network.getTable(
-								CyNetwork.class,
-								CyNetwork.LOCAL_ATTRS)),
-				new HeinzTask(network));
+		return new TaskIterator(new HeinzWorkflowTask(network));
 	}
 }
