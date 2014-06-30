@@ -26,6 +26,11 @@ public class HeinzTask extends AbstractNetworkTask {
 	/**
 	 * Initialise the task, setting the required parameters as fields.
 	 * 
+	 * If the BUM model parameters ({@code lamda} and {@code a})
+	 * are null, they will be read from the network table columns
+	 * ‘{@code pValueColumnName}.BUM.lambda’ and
+	 * ‘{@code pValueColumnName}.BUM.a’.
+	 * 
 	 * @param network  the CyNetwork to detect a module in
 	 * @param pValueColumnName  the node table column holding the p-values
 	 * @param resultColumnName  the node table column to write the results to
@@ -96,6 +101,36 @@ public class HeinzTask extends AbstractNetworkTask {
 						"’.");
 			}
 		}
+		
+		CyRow networkTableRow = 
+				network.getDefaultNetworkTable().getRow(network.getSUID());
+		if (lambda == null) {
+			taskMonitor.setStatusMessage(
+					"Reading ‘lambda’ parameter from network table");
+			lambda = networkTableRow.get(
+					pValueColumnName + ".BUM.lambda",
+					Double.class);
+			if (lambda == null) {
+				throw new NullPointerException(
+						"Network table column ‘" +
+						pValueColumnName +
+						".BUM.lambda’ not found");
+			}
+		}
+		if (a == null) {
+			taskMonitor.setStatusMessage(
+					"Reading ‘a’ parameter from network table");
+			a = networkTableRow.get(
+					pValueColumnName + ".BUM.a", 
+					Double.class);
+			if (a == null) {
+				throw new NullPointerException(
+						"Network table column ‘" +
+						pValueColumnName +
+						".BUM.a’ not found");
+			}
+		}
+		
 		taskMonitor.setProgress(0.02);
 		
 		// stop if Cancel was clicked
