@@ -1,18 +1,14 @@
 package org.cytoscape.heinz.internal;
 
 
-import java.util.List;
-import java.util.ArrayList;
 import java.io.IOException;
 
 import org.cytoscape.task.AbstractTableColumnTask;
 import org.cytoscape.work.TaskMonitor;
 import org.cytoscape.work.Tunable;
-import org.cytoscape.work.util.ListSingleSelection;
-import org.cytoscape.model.CyNode;
 import org.cytoscape.model.CyTable;
 import org.cytoscape.model.CyColumn;
-import org.cytoscape.model.CyRow;
+
 
 /**
  * Task that fits a BUM model to a column of p-values in the node table.
