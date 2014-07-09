@@ -12,7 +12,18 @@ public interface BumFitterClient {
 	 * @throws IOException  if an I/O error occurs
 	 */
 	public void sendPValues(double[] pvalues)
-			throws IOException, IllegalStateException;
+			throws IOException;
+	
+	/**
+	 * Set the number of start points to use while fitting.
+	 * 
+	 * May be skipped to leave the default value of 10.
+	 * 
+	 * @param starts  the number of starts to use
+	 * 
+	 * @throws IOException  if an I/O error occurs
+	 */
+	public void sendStarts(int starts) throws IOException;
 	
 	/**
 	 * Make sure plots will be generated when <code>run()</code> is called.
@@ -27,6 +38,7 @@ public interface BumFitterClient {
 	 * @throws IOException  if the model fitting was unsuccessful
 	 * 
 	 * @see #sendPValues(double[])
+	 * @see #sendStarts(int)
 	 * @see #enablePlotting()
 	 */
 	public void run() throws IOException;
