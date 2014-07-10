@@ -112,7 +112,7 @@ public class SwBumFitterClient extends AbstractSwClient implements BumFitterClie
 		new ClientMessage(
 				ClientMessage.TYPE_GET_OUTPUT,
 				"254",
-				null);
+				null).send(outputStream);
 		ServerMessage response = ServerMessage.receive(inputStream);
 		if (response.getType() != ServerMessage.TYPE_OUTPUT) {
 			throw new IOException("No output file received from server.");
