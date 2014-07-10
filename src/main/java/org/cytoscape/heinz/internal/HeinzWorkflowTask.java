@@ -42,14 +42,19 @@ public class HeinzWorkflowTask extends AbstractNetworkTask {
 	public BoundedDouble a = new BoundedDouble(0.0, 0.25, 1.0, true, true);
 	@Tunable(
 			description="Host",
-			groups={"BUM model", "Parameter fitting server"},
+			groups={"BUM model", "Parameter fitting", "server"},
 			dependsOn="fitBum=true")
 	public String bumServerHost = "localhost";
 	@Tunable(
 			description="Port",
-			groups={"BUM model", "Parameter fitting server"},
+			groups={"BUM model", "Parameter fitting", "server"},
 			dependsOn="fitBum=true")
 	public int bumServerPort = 9000;
+	@Tunable(
+			description="Number of starts for model fitting",
+			groups={"BUM model", "Parameter fitting"},
+			dependsOn="fitBum=true")
+	public int bumFittingStarts = 10;
 	
 
 	@Tunable(
@@ -147,7 +152,10 @@ public class HeinzWorkflowTask extends AbstractNetworkTask {
 			Task bumFittingTask = new BumFittingTask(
 					network.getDefaultNodeTable().getColumn(
 							pValueColumnName.getSelectedValue()),
-					network.getTable(CyNetwork.class, CyNetwork.LOCAL_ATTRS),
+					network.getTable(
+							CyNetwork.class, CyNetwork.LOCAL_ATTRS).getRow(
+									network.getSUID()),
+					bumFittingStarts,
 					bumServerHost, bumServerPort);
 			workflowTaskIterator.append(bumFittingTask);
 		}

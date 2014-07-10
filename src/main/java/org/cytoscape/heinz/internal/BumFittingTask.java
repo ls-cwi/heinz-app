@@ -7,6 +7,7 @@ import org.cytoscape.task.AbstractTableColumnTask;
 import org.cytoscape.work.TaskMonitor;
 import org.cytoscape.work.Tunable;
 import org.cytoscape.model.CyTable;
+import org.cytoscape.model.CyRow;
 import org.cytoscape.model.CyColumn;
 
 
@@ -18,7 +19,8 @@ import org.cytoscape.model.CyColumn;
  */
 public class BumFittingTask extends AbstractTableColumnTask {
 	
-	private final CyTable networkTable;
+	private final CyRow networkTableRow;
+	private final int starts;
 	private final String serverHost;
 	private final int serverPort;
 	
@@ -29,23 +31,26 @@ public class BumFittingTask extends AbstractTableColumnTask {
 	 * Initialise the task, obtaining required parameters.
 	 * 
 	 * @param pValueColumn  node table column holding the p-values to fit to
-	 * @param networkTable  network table to write the results to
+	 * @param starts  number of starts for model fitting
+	 * @param networkTableRow  network table row to write the results to
 	 * @param serverHost  the host name of the model fitting server
 	 * @param serverPort  the port number of the model fitting server
 	 */
     public BumFittingTask(
     		CyColumn pValueColumn,
-    		CyTable networkTable,
+    		CyRow networkTableRow,
+    		int starts,
     		String serverHost,
     		int serverPort) {
     	// set the `column' field
     	super(pValueColumn);
     	// set the other parameters as fields
-    	if (networkTable == null) {
+    	if (networkTableRow == null) {
     		throw new IllegalArgumentException(
-    				"No network table to write the BUM parameters to.");
+    				"No network table row to write the BUM parameters to.");
     	}
-    	this.networkTable = networkTable;
+    	this.networkTableRow = networkTableRow;
+    	this.starts = starts;
     	this.serverHost = serverHost;
     	this.serverPort = serverPort;	
     }
