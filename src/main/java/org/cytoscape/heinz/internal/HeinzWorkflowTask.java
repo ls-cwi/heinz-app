@@ -138,7 +138,6 @@ public class HeinzWorkflowTask extends AbstractNetworkTask {
 						"’.");
 			}
 		}
-		taskMonitor.setProgress(0.5);
 		
 		// stop if Cancel was clicked
 		if (cancelled) { return; }
