@@ -84,7 +84,7 @@
 		</plugins>
 	</build>
 
-	<!-- Links to the Cytoscape Maven repositories. -->
+	<!-- Links to the Cytoscape and embedded Maven repositories. -->
 	<repositories>
 		<repository>
 			<id>cytoscape_snapshots</id>
@@ -107,6 +107,18 @@
 			</releases>
 			<name>Cytoscape Releases</name>
 			<url>http://code.cytoscape.org/nexus/content/repositories/releases/</url>
+		</repository>
+		<repository>
+			<id>lib</id>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+			<releases>
+				<enabled>true</enabled>
+				<checksumPolicy>ignore</checksumPolicy>
+			</releases>
+			<name>Project-bundled repository</name>
+			<url>file://${project.basedir}/lib</url>
 		</repository>
 	</repositories>
 
@@ -138,6 +150,26 @@
 			<groupId>org.cytoscape</groupId>
 			<artifactId>swing-application-api</artifactId>
 			<version>3.0.0</version>
+		</dependency>
+		<dependency>
+    		<groupId>org.bridgedb</groupId>
+    		<artifactId>org.bridgedb</artifactId>
+    		<version>1.2.3</version>
+    	</dependency>
+    	<dependency>
+    		<groupId>org.bridgedb</groupId>
+    		<artifactId>org.bridgedb.bio</artifactId>
+    		<version>1.2.3</version>
+    	</dependency>
+    	<dependency>
+    		<groupId>org.bridgedb</groupId>
+    		<artifactId>org.bridgedb.rdb</artifactId>
+    		<version>1.2.3</version>
+   		 </dependency>
+    	<dependency>
+			<groupId>org.apache.derby</groupId>
+			<artifactId>derby</artifactId>
+			<version>10.10.2.0</version>
 		</dependency>
 	</dependencies>
 
