@@ -3,6 +3,7 @@ package org.cytoscape.heinz.internal;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.io.File;
 import java.io.IOException;
 
 import org.cytoscape.task.AbstractNetworkTask;
@@ -25,7 +26,7 @@ import org.cytoscape.work.util.BoundedDouble;
  */
 public class HeinzWorkflowTask extends AbstractNetworkTask {
 
-	// Tunable parameters to be provided by the user before run() is called
+	// Tunable parameters to be prompted for before run() is called
 	@Tunable(
 			description="Fit BUM  model parameters",
 			groups={"BUM model"})
@@ -72,15 +73,36 @@ public class HeinzWorkflowTask extends AbstractNetworkTask {
 	
 	@Tunable(
 			description="Node table column holding the p-values",
-			groups = {"General"})
+			groups={"General"})
 	public ListSingleSelection<String> pValueColumnName;
 	@Tunable(
 			description="Output column name",
-			groups = {"General"})
+			groups={"General"})
 	public String resultColumnName = "in Heinz module";
-
+	
+	@Tunable(
+			description="Perform GO enrichment",
+			groups={"GO Enrichment"})
+	public Boolean performGoEnrichment = true;
+	@Tunable(
+			description="BridgeDB Derby database file (http://bridgedb.org/data/gene_database/)",
+			groups={"GO Enrichment"},
+			dependsOn="performGoEnrichment=true",
+			params="input=true")
+	public File bridgeDbFile = null;
+	@Tunable(
+			description="Gene ID column",
+			groups={"GO Enrichment"},
+			dependsOn="performGoEnrichment=true")
+	public ListSingleSelection<String> idColumnSelector;
+	@Tunable(
+			description="Gene ID type",
+			groups={"GO Enrichment"},
+			dependsOn="performGoEnrichment=true")
+	public ListSingleSelection<String> idTypeSelector;
+	
 	/**
-	 * Initialise the task, getting a CyNetwork. 
+	 * Initialise the task, getting a CyNetwork.
 	 * 
 	 * @param n  the network to operate on
 	 */
@@ -98,6 +120,21 @@ public class HeinzWorkflowTask extends AbstractNetworkTask {
 		}
 		// Set the column names as options in the Tunable
 		pValueColumnName = new ListSingleSelection<String>(doubleColumnNameList);
+		
+		// Collect the names of the node table columns that have the type String
+		List<String> stringColumnNameList = new ArrayList<String>();
+		for (CyColumn column : network.getDefaultNodeTable().getColumns()) {
+			if (column.getType() == String.class) {
+				stringColumnNameList.add(column.getName());
+			}
+		}
+		// Set the column names as options in the Tunable
+		idColumnSelector = new ListSingleSelection<String>(stringColumnNameList);
+		
+		// List the supported ID types in the ID type selector
+		String[] supportedIdTypes = GoEnrichmentTask.getSupportedIdTypes();
+		java.util.Arrays.sort(supportedIdTypes);
+		idTypeSelector = new ListSingleSelection<String>(supportedIdTypes);
 		
 	}
 
@@ -182,6 +219,21 @@ public class HeinzWorkflowTask extends AbstractNetworkTask {
 					heinzServerPort);
 		}
 		workflowTaskIterator.append(heinzTask);
+		
+		if (performGoEnrichment) {
+			if (bridgeDbFile == null) {
+				throw new IllegalArgumentException("No Bridge Derby database file selected");
+			}
+			Task goEnrichmentTask = new GoEnrichmentTask(
+					//TODO replace if the default node table is not writable
+					//network.getTable(CyNode.class, CyNetwork.LOCAL_ATTRS),
+					network.getDefaultNodeTable(),
+					bridgeDbFile.getPath(),
+					idColumnSelector.getSelectedValue(),
+					idTypeSelector.getSelectedValue(),
+					resultColumnName);
+			workflowTaskIterator.append(goEnrichmentTask);
+		}
 		
 		// append the tasks to the calling task iterator
 		insertTasksAfterCurrentTask(workflowTaskIterator);

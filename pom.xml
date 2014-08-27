@@ -78,6 +78,9 @@
 						<Export-Package>${bundle.namespace}</Export-Package>
 						<Private-Package>${bundle.namespace}.internal.*</Private-Package>
 						<Bundle-Activator>${bundle.namespace}.internal.CyActivator</Bundle-Activator>
+						<Embed-Dependency>*;scope=!provided</Embed-Dependency>
+						<!-- TODO attempt to make the derby dependency work -->
+						<!-- <Import-Package>com.ibm.jvm;resolution:=optional,org.apache.derby.iapi.services.sanity;resolution:=optional,*</Import-Package> -->
 					</instructions>
 				</configuration>
 			</plugin>
@@ -118,7 +121,7 @@
 				<checksumPolicy>ignore</checksumPolicy>
 			</releases>
 			<name>Project-bundled repository</name>
-			<url>file://${project.basedir}/lib</url>
+			<url>${project.baseUri}lib</url>
 		</repository>
 	</repositories>
 
@@ -128,29 +131,34 @@
 			<groupId>org.osgi</groupId>
 			<artifactId>org.osgi.core</artifactId>
 			<version>4.2.0</version>
+			<scope>provided</scope>
 		</dependency>
 		
 		<dependency>
 			<groupId>org.cytoscape</groupId>
 			<artifactId>service-api</artifactId>
 			<version>3.0.0</version>
+			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.cytoscape</groupId>
 			<artifactId>model-api</artifactId>
 			<version>3.0.0</version>
+			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.cytoscape</groupId>
 			<artifactId>core-task-api</artifactId>
 			<version>3.0.0</version>
+			<scope>provided</scope>
 		</dependency>
-
 		<dependency>
 			<groupId>org.cytoscape</groupId>
 			<artifactId>swing-application-api</artifactId>
 			<version>3.0.0</version>
+			<scope>provided</scope>
 		</dependency>
+		
 		<dependency>
     		<groupId>org.bridgedb</groupId>
     		<artifactId>org.bridgedb</artifactId>
@@ -161,16 +169,28 @@
     		<artifactId>org.bridgedb.bio</artifactId>
     		<version>1.2.3</version>
     	</dependency>
+    	<!-- TODO
     	<dependency>
     		<groupId>org.bridgedb</groupId>
     		<artifactId>org.bridgedb.rdb</artifactId>
     		<version>1.2.3</version>
    		 </dependency>
     	<dependency>
+    		<groupId>org.bridgedb</groupId>
+    		<artifactId>org.bridgedb.rdb.construct</artifactId>
+    		<version>1.2.3</version>
+    	</dependency>
+		<dependency>
+			<groupId>mysql</groupId>
+			<artifactId>mysql-connector-java</artifactId>
+			<version>5.1.12</version>
+		</dependency>
+    	<dependency>
 			<groupId>org.apache.derby</groupId>
 			<artifactId>derby</artifactId>
-			<version>10.10.2.0</version>
+			<version>10.5.3.0_1</version>
 		</dependency>
+		-->
 	</dependencies>
-
+	
 </project>
