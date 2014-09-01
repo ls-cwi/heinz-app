@@ -110,11 +110,15 @@ public class GoEnrichmentTask extends AbstractTableTask {
 		return goTermMap;
 	}
 	
+	public final String BP_COLUMN_NAME = "`biological process' terms";
+	public final String CC_COLUMN_NAME = "`cellular_component' terms";
+	public final String MF_COLUMN_NAME = "`molecular_function' terms";
+	
 	private final String bridgeDbFileName;
 	private final String idColumnName;
 	private final String idType;
 	private final String moduleColumnName;
-	private Map<String, GoTerm> goTermMap;
+	private Map<String, GoTerm> ontologyMap;
 	
 	/**
  	 * Initialise the task, obtaining required parameters.
@@ -164,81 +168,102 @@ public class GoEnrichmentTask extends AbstractTableTask {
 		taskMonitor.setStatusMessage(
 				"Loading the Gene Ontology");
 		
-		goTermMap = parseOboFile(getClass().getResourceAsStream("/data/go.obo"));
+		ontologyMap = parseOboFile(getClass().getResourceAsStream("/data/go.obo"));
 		
 		taskMonitor.setStatusMessage(
 				"Loading the selected Bridge Derby database");
 		
-		if (false) {
-		// Load the driver for loading the database
-    	try {
-    		// TODO
-    		Class.forName("org.bridgedb.rdb.IDMapperRdb");
-    		//Class.forName("org.bridgedb.webservice.bridgerest.BridgeRest"); 
-		} catch (ClassNotFoundException e) {
-			throw new RuntimeException("Database driver not found");
-		}
-    	
-
-    	// Load the database, creating an IDMapper instance.
-    	IDMapper mapper = null;
-		try {
-			// TODO
-			mapper = BridgeDb.connect("idmapper-pgdb:" + bridgeDbFileName);
-			//mapper = BridgeDb.connect("idmapper-bridgerest:http://webservice.bridgedb.org/Mouse");
-			if (mapper != null) {
-				throw new IDMapperException();
-			}
-		} catch (IDMapperException e) {
-			throw new IOException(
-					e.getCause());
-					//TODO "Could not load database in " + bridgeDbFileName);
-		}
-    	
-		taskMonitor.setStatusMessage(
-				"Finding GO terms for the nodes");
+// TODO uncomment when BridgeDB is working to look up the terms in the database
+//		// load the driver for loading the database
+//    	try {
+//    		// TODO
+//    		Class.forName("org.bridgedb.rdb.IDMapperRdb");
+//    		//Class.forName("org.bridgedb.webservice.bridgerest.BridgeRest"); 
+//		} catch (ClassNotFoundException e) {
+//			throw new RuntimeException("Database driver not found");
+//		}
+//    	
+//
+//    	// load the database, creating an IDMapper instance.
+//    	IDMapper mapper = null;
+//		try {
+//			// TODO
+//			mapper = BridgeDb.connect("idmapper-pgdb:" + bridgeDbFileName);
+//			//mapper = BridgeDb.connect("idmapper-bridgerest:http://webservice.bridgedb.org/Mouse");
+//			if (mapper != null) {
+//				throw new IDMapperException();
+//			}
+//		} catch (IDMapperException e) {
+//			throw new IOException(
+//					e.getCause());
+//					//TODO "Could not load database in " + bridgeDbFileName);
+//		}
+//    	
+//		taskMonitor.setStatusMessage(
+//				"Finding GO terms for the nodes");
+//		
+//		// look up the DataSource object for the gene ID type 
+//		DataSource idDataSource = DataSource.getByFullName(idType);
+//		
+//    	// create a set of Xref instances for the identifiers to be looked up
+//		Set<Xref> sources = new HashSet<Xref>();
+//		for (String id : table.getColumn(idColumnName).getValues(String.class)) {
+//			sources.add(new Xref(id, idDataSource));
+//		}
+//    	// query the GO terms for all of the ids
+//    	Map<Xref, Set<Xref>> goTermMap;
+//		try {
+//			goTermMap = mapper.mapID(
+//					sources,
+//					DataSource.getByFullName("GeneOntology"));
+//		} catch (IDMapperException e) {
+//			throw new IOException("Could not query the loaded BridgeDB database");
+//		}
 		
-		// Look up the DataSource object for the gene ID type 
-		DataSource idDataSource = DataSource.getByFullName(idType);
+		// create columns for terms of each namespace in the node table
+		// TODO handle pre-existing columns
+		table.createListColumn(BP_COLUMN_NAME, String.class, false);
+		table.createListColumn(CC_COLUMN_NAME, String.class, false);
+		table.createListColumn(MF_COLUMN_NAME, String.class, false);
 		
-    	// Create a set of Xref instances for the identifiers to be looked up
-		Set<Xref> sources = new HashSet<Xref>();
-		for (String id : table.getColumn(idColumnName).getValues(String.class)) {
-			sources.add(new Xref(id, idDataSource));
-		}
-    	// look up the GO terms for each of these Xref instances
-    	Map<Xref, Set<Xref>> goTermMap;
-		try {
-			goTermMap = mapper.mapID(
-					sources,
-					DataSource.getByFullName("GeneOntology"));
-		} catch (IDMapperException e) {
-			throw new IOException("Could not query the loaded BridgeDB database");
-		}
-		
-		// TODO separate the GO Terms into cellular components, biological
-		// processes and molecular functions
-		
-		table.createListColumn("All terms", String.class, false);
 		for (CyRow row : table.getAllRows()) {
-			// Make an Xref instance for the gene ID of this row
-			Xref idXref = new Xref(
-					row.get(idColumnName, String.class),
-					idDataSource);
-			// Look up the GO terms for this ID
-			Set<Xref> rowTermXrefs = goTermMap.get(idXref);
-			// extract the actual String
-			List<String> rowTermStrings =
-					new ArrayList<String>(rowTermXrefs.size());
-			for (Xref term : rowTermXrefs) {
-				rowTermStrings.add(term.getId());
+			// start with an empty list for each term column
+			List<String> bpTerms = new ArrayList<String>();
+			List<String> ccTerms = new ArrayList<String>();
+			List<String> mfTerms = new ArrayList<String>();
+// TODO uncomment when BridgeDb is working to collect the terms for each node
+//			// Make an Xref instance for the gene ID of this row
+//			Xref idXref = new Xref(
+//					row.get(idColumnName, String.class),
+//					idDataSource);
+//			// look up the GO terms for this ID
+//			Set<Xref> rowTermXrefs = goTermMap.get(idXref);
+//			// extract the actual GO id Strings and list them by namespace
+//			for (Xref term : rowTermXrefs) {
+//				String termId = term.getId()
+			// TODO use the loop above instead when BridgeDb works
+			for (String termId : row.getList("All terms", String.class)) {
+				// check if the key exists in the loaded gene ontology
+				if (!ontologyMap.containsKey(termId)) {
+					throw new IOException("Unknown term " + termId + ".");
+				}
+				// look up the term’s namespace in the ontology
+				GoNamespace termNamespace =
+						ontologyMap.get(termId).namespace;
+				// add the id to the appropriate list
+				if (termNamespace == GoNamespace.BIOLOGICAL_PROCESS) {
+					bpTerms.add(termId);
+				} else if (termNamespace == GoNamespace.CELLULAR_COMPONENT) {
+					ccTerms.add(termId);
+				} else if (termNamespace == GoNamespace.MOLECULAR_FUNCTION) {
+					mfTerms.add(termId);
+				}
 			}
-			row.set("all terms", rowTermStrings);
-		}
-		}
-		
-		taskMonitor.setStatusMessage(
-				"Separating terms by namespace");
+			// set the values of the term columns for this row
+			row.set(BP_COLUMN_NAME, bpTerms);
+			row.set(CC_COLUMN_NAME, ccTerms);
+			row.set(MF_COLUMN_NAME, mfTerms);
+		}		
 		
 		// TODO create a group node for each term occurring in the module
 		
