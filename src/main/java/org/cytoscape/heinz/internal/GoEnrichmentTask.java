@@ -244,9 +244,9 @@ public class GoEnrichmentTask extends AbstractTableTask {
 		
 		for (CyRow row : table.getAllRows()) {
 			// start with an empty list for each term column
-			List<String> bpTerms = new ArrayList<String>();
-			List<String> ccTerms = new ArrayList<String>();
-			List<String> mfTerms = new ArrayList<String>();
+			Set<String> bpTerms = new HashSet<String>();
+			Set<String> ccTerms = new HashSet<String>();
+			Set<String> mfTerms = new HashSet<String>();
 // TODO uncomment when BridgeDb is working to collect the terms for each node
 //			// Make an Xref instance for the gene ID of this row
 //			Xref idXref = new Xref(
@@ -275,9 +275,9 @@ public class GoEnrichmentTask extends AbstractTableTask {
 				}
 			}
 			// set the values of the term columns for this row
-			row.set(BP_COLUMN_NAME, bpTerms);
-			row.set(CC_COLUMN_NAME, ccTerms);
-			row.set(MF_COLUMN_NAME, mfTerms);
+			row.set(BP_COLUMN_NAME, new ArrayList<String>(bpTerms));
+			row.set(CC_COLUMN_NAME, new ArrayList<String>(ccTerms));
+			row.set(MF_COLUMN_NAME, new ArrayList<String>(mfTerms));
 		}		
 		
 		// TODO create a group node for each term occurring in the module
