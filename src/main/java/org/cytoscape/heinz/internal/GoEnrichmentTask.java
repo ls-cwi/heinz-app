@@ -114,10 +114,20 @@ public class GoEnrichmentTask extends AbstractTableTask {
 					throw new IOException(
 							"Encountered entry without namespace in ontology file");
 				}
-				// now the entry has been parsed, add it to the map for each id
+				// now the entry has been parsed, construct the object
 				GoTerm term = new GoTerm(id, namespace, name);
+				// test if the id is already in the map before adding it
+				if (goTermMap.containsKey(id)) {
+					throw new IOException(
+							"GO ID " + id + " found multiple times in ontology file.");
+				}
 				goTermMap.put(id, term);
+				// do the same for any alternative ids
 				for (String alt_id : alt_ids) {
+					if (goTermMap.containsKey(alt_id)) {
+						throw new IOException(
+								"GO ID " + alt_id + " found multiple times in ontology file.");
+					}
 					goTermMap.put(alt_id, term);
 				}
 			}
