@@ -39,16 +39,25 @@ public class GoEnrichmentTask extends AbstractTableTask {
 	
 	private static class GoTerm {
 		
+		public final String canonicalId;
 		public final GoNamespace namespace;
 		public final String name;
 		
-		public GoTerm(GoNamespace namespace, String name) {
+		public GoTerm(String canonicalId, GoNamespace namespace, String name) {
+			this.canonicalId = canonicalId;
 			this.namespace = namespace;
 			this.name = name;
 		}
 		
 	}
 	
+	/**
+	 * Parse term information from a Gene Ontology ‘.obo’ file.
+	 * 
+	 * @param oboFile  the ontology file as an input stream
+	 * @return a map from GO ids to objects holding other fields of the terms
+	 * @throws IOException  if an error occurs reading and parsing the file
+	 */
 	private static Map<String, GoTerm> parseOboFile(InputStream oboFile)
 			throws IOException {
 		Map<String, GoTerm> goTermMap = new HashMap<String, GoTerm>();
@@ -61,6 +70,7 @@ public class GoEnrichmentTask extends AbstractTableTask {
 			if (line.equals("[Term]")) {
 				// empty the variables for the fields
 				String id = null;
+				List<String> alt_ids = new ArrayList<String>();
 				String name = null;
 				GoNamespace namespace = null;
 				// loop over the lines of the entry
@@ -75,6 +85,8 @@ public class GoEnrichmentTask extends AbstractTableTask {
 					// check if the field is one of the required ones and handle it
 					if (field[0].equals("id")) {
 						id = field[1];
+					} else if (field[0].equals("alt_id")) {
+						alt_ids.add(field[1]);
 					} else if (field[0].equals("name")) {
 						name = field[1];
 					} else if (field[0].equals("namespace")) {
@@ -102,8 +114,12 @@ public class GoEnrichmentTask extends AbstractTableTask {
 					throw new IOException(
 							"Encountered entry without namespace in ontology file");
 				}
-				// now the entry has been parsed, add it to the map
-				goTermMap.put(id, new GoTerm(namespace, name));
+				// now the entry has been parsed, add it to the map for each id
+				GoTerm term = new GoTerm(id, namespace, name);
+				goTermMap.put(id, term);
+				for (String alt_id : alt_ids) {
+					goTermMap.put(alt_id, term);
+				}
 			}
 		}
 		
@@ -247,16 +263,15 @@ public class GoEnrichmentTask extends AbstractTableTask {
 				if (!ontologyMap.containsKey(termId)) {
 					throw new IOException("Unknown term " + termId + ".");
 				}
-				// look up the term’s namespace in the ontology
-				GoNamespace termNamespace =
-						ontologyMap.get(termId).namespace;
+				// look up the term’s details from the ontology
+				GoTerm term = ontologyMap.get(termId);
 				// add the id to the appropriate list
-				if (termNamespace == GoNamespace.BIOLOGICAL_PROCESS) {
-					bpTerms.add(termId);
-				} else if (termNamespace == GoNamespace.CELLULAR_COMPONENT) {
-					ccTerms.add(termId);
-				} else if (termNamespace == GoNamespace.MOLECULAR_FUNCTION) {
-					mfTerms.add(termId);
+				if (term.namespace == GoNamespace.BIOLOGICAL_PROCESS) {
+					bpTerms.add(term.canonicalId);
+				} else if (term.namespace == GoNamespace.CELLULAR_COMPONENT) {
+					ccTerms.add(term.canonicalId);
+				} else if (term.namespace == GoNamespace.MOLECULAR_FUNCTION) {
+					mfTerms.add(term.canonicalId);
 				}
 			}
 			// set the values of the term columns for this row
