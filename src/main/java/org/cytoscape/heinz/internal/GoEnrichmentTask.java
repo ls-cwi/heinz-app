@@ -16,6 +16,8 @@ import org.cytoscape.task.AbstractTableTask;
 import org.cytoscape.work.TaskMonitor;
 import org.cytoscape.model.CyTable;
 import org.cytoscape.model.CyRow;
+import org.cytoscape.model.CyColumn;
+
 import org.bridgedb.BridgeDb;
 import org.bridgedb.DataSource;
 import org.bridgedb.bio.BioDataSource;
@@ -136,9 +138,9 @@ public class GoEnrichmentTask extends AbstractTableTask {
 		return goTermMap;
 	}
 	
-	public final String BP_COLUMN_NAME = "`biological process' terms";
-	public final String CC_COLUMN_NAME = "`cellular_component' terms";
-	public final String MF_COLUMN_NAME = "`molecular_function' terms";
+	public final String BP_COLUMN_NAME = "‘biological process’ terms";
+	public final String CC_COLUMN_NAME = "‘cellular_component’ terms";
+	public final String MF_COLUMN_NAME = "‘molecular_function’ terms";
 	
 	private final String bridgeDbFileName;
 	private final String idColumnName;
@@ -246,11 +248,31 @@ public class GoEnrichmentTask extends AbstractTableTask {
 //			throw new IOException("Could not query the loaded BridgeDB database");
 //		}
 		
-		// create columns for terms of each namespace in the node table
-		// TODO handle pre-existing columns
-		table.createListColumn(BP_COLUMN_NAME, String.class, false);
-		table.createListColumn(CC_COLUMN_NAME, String.class, false);
-		table.createListColumn(MF_COLUMN_NAME, String.class, false);
+		// create a column in the node table for terms in each namespace
+		String[] termColNames = {
+				BP_COLUMN_NAME,
+				CC_COLUMN_NAME,
+				MF_COLUMN_NAME };
+		for (String colName : termColNames) {
+			// identify or create the column to store the results in
+			CyColumn column = table.getColumn(colName);
+			// if there was no column with that name yet
+			if (column == null) {
+				// create the column
+				table.createListColumn(colName, String.class, false);
+			// if the (existing) column is of the right type
+			} else if (column.getListElementType() == String.class) {
+				// delete it and make a new, empty one
+				table.deleteColumn(colName);
+				table.createListColumn(colName, String.class, false);
+			// if the column is not of the right type
+			} else {
+				throw new IllegalArgumentException(
+						"Column ‘" +
+						colName +
+						"’ is not a ‘List of Strings’ column.");
+			}
+		}
 		
 		for (CyRow row : table.getAllRows()) {
 			// start with an empty list for each term column
