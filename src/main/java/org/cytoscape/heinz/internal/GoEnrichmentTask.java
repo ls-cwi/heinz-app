@@ -182,6 +182,49 @@ public class GoEnrichmentTask extends AbstractTableTask {
     	return availableDbNames.toArray(new String[0]);
     }
     
+    /**
+     * Create a new node table column, or overwrite an existing same-type one. 
+     * 
+     * @param name  the name of the column to create or overwrite
+     * @param type  the type of the column (may be List)
+     * @param elementType  the type of the elements for a list column, or null
+     * @throws IllegalArgumentException  if a column of another type is found
+     */
+    private void createNodeColumn(String name, Class<?> type, Class<?> elementType) {
+    	// identify the column if it exists already
+    	CyColumn column = table.getColumn(name);
+    	// if there was no column with this name yet
+    	if (column == null) {
+    		// create the column
+    		if (type == List.class) {
+    			table.createListColumn(name, elementType, false);
+    		} else {
+    			table.createColumn(name, type, false);
+    		}
+    	// if the existing column is of the right type
+    	} else if (
+    			(type == List.class && column.getListElementType() == elementType) ||
+    			(column.getType() == type)) {
+    		// delete it and make a new, empty one
+    		table.deleteColumn(name);
+    		if (type == List.class) {
+    			table.createListColumn(name, elementType, false);
+    		} else {
+    			table.createColumn(name, type, false);
+    		}
+    	// if the column is not of the right type
+    	} else {
+    		throw new IllegalArgumentException(
+    				"Column ‘" +
+    				name +
+    				"’ is not of type ‘" +
+    				(type == List.class ?
+    						"List of " + elementType.getSimpleName() :
+    						type.getSimpleName()) +
+    				"’.");
+    	}
+    }
+    
 	/**
      * Find GO terms enriched in the network and add them as group nodes.
      * 
@@ -254,24 +297,7 @@ public class GoEnrichmentTask extends AbstractTableTask {
 				CC_COLUMN_NAME,
 				MF_COLUMN_NAME };
 		for (String colName : termColNames) {
-			// identify or create the column to store the results in
-			CyColumn column = table.getColumn(colName);
-			// if there was no column with that name yet
-			if (column == null) {
-				// create the column
-				table.createListColumn(colName, String.class, false);
-			// if the (existing) column is of the right type
-			} else if (column.getListElementType() == String.class) {
-				// delete it and make a new, empty one
-				table.deleteColumn(colName);
-				table.createListColumn(colName, String.class, false);
-			// if the column is not of the right type
-			} else {
-				throw new IllegalArgumentException(
-						"Column ‘" +
-						colName +
-						"’ is not a ‘List of Strings’ column.");
-			}
+			createNodeColumn(colName, List.class, String.class);
 		}
 		
 		for (CyRow row : table.getAllRows()) {
