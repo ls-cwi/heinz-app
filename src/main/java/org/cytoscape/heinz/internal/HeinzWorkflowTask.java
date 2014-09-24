@@ -7,6 +7,8 @@ import java.io.File;
 import java.io.IOException;
 
 import org.cytoscape.task.AbstractNetworkTask;
+import org.cytoscape.group.CyGroupFactory;
+import org.cytoscape.group.CyGroupManager;
 import org.cytoscape.model.CyNetwork;
 import org.cytoscape.model.CyColumn;
 import org.cytoscape.model.CyRow;
@@ -25,6 +27,9 @@ import org.cytoscape.work.util.BoundedDouble;
  *  to the calling task iterator.
  */
 public class HeinzWorkflowTask extends AbstractNetworkTask {
+	
+	private final CyGroupManager groupManager;
+	private final CyGroupFactory groupFactory;
 
 	// Tunable parameters to be prompted for before run() is called
 	@Tunable(
@@ -106,10 +111,16 @@ public class HeinzWorkflowTask extends AbstractNetworkTask {
 	 * 
 	 * @param n  the network to operate on
 	 */
-	public HeinzWorkflowTask(final CyNetwork n) {
+	public HeinzWorkflowTask(
+			final CyNetwork n,
+			final CyGroupManager groupManager,
+			final CyGroupFactory groupFactory) {
 		
 		// Will set a CyNetwork field called "network"
 		super(n);
+		
+		this.groupManager = groupManager;
+		this.groupFactory = groupFactory;
 		
 		// Collect the names of the node table columns that have the type Double
 		List<String> doubleColumnNameList = new ArrayList<String>();
@@ -225,13 +236,13 @@ public class HeinzWorkflowTask extends AbstractNetworkTask {
 				throw new IllegalArgumentException("No Bridge Derby database file selected");
 			}
 			Task goEnrichmentTask = new GoEnrichmentTask(
-					//TODO replace if the default node table is not writable
-					//network.getTable(CyNode.class, CyNetwork.LOCAL_ATTRS),
-					network.getDefaultNodeTable(),
+					network,
 					bridgeDbFile.getPath(),
 					idColumnSelector.getSelectedValue(),
 					idTypeSelector.getSelectedValue(),
-					resultColumnName);
+					resultColumnName,
+					groupManager,
+					groupFactory);
 			workflowTaskIterator.append(goEnrichmentTask);
 		}
 		

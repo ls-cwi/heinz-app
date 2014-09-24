@@ -158,6 +158,12 @@
 			<version>3.0.0</version>
 			<scope>provided</scope>
 		</dependency>
+		<dependency>
+			<groupId>org.cytoscape</groupId>
+			<artifactId>group-api</artifactId>
+			<version>3.0.0</version>
+			<scope>provided</scope>
+		</dependency>
 		
 		<dependency>
     		<groupId>org.bridgedb</groupId>

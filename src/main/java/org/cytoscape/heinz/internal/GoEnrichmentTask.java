@@ -12,11 +12,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
-import org.cytoscape.task.AbstractTableTask;
+import org.cytoscape.task.AbstractNetworkTask;
 import org.cytoscape.work.TaskMonitor;
+import org.cytoscape.model.CyNetwork;
 import org.cytoscape.model.CyTable;
 import org.cytoscape.model.CyRow;
 import org.cytoscape.model.CyColumn;
+import org.cytoscape.group.CyGroupManager;
+import org.cytoscape.group.CyGroupFactory;
 
 import org.bridgedb.BridgeDb;
 import org.bridgedb.DataSource;
@@ -30,7 +33,7 @@ import org.bridgedb.IDMapperException;
  * Task to gather and  GO terms overrepresented in a given subnetwork.
  */
 @SuppressWarnings("deprecation")
-public class GoEnrichmentTask extends AbstractTableTask {
+public class GoEnrichmentTask extends AbstractNetworkTask {
 	
 	private enum GoNamespace {
 		BIOLOGICAL_PROCESS,
@@ -41,6 +44,7 @@ public class GoEnrichmentTask extends AbstractTableTask {
 	
 	private static class GoTerm {
 		
+		// TODO add a list of parents too
 		public final String canonicalId;
 		public final GoNamespace namespace;
 		public final String name;
@@ -138,14 +142,21 @@ public class GoEnrichmentTask extends AbstractTableTask {
 		return goTermMap;
 	}
 	
-	public final String BP_COLUMN_NAME = "‘biological process’ terms";
-	public final String CC_COLUMN_NAME = "‘cellular_component’ terms";
-	public final String MF_COLUMN_NAME = "‘molecular_function’ terms";
+	public static final String BP_COLUMN_NAME = "‘biological process’ terms";
+	public static final String CC_COLUMN_NAME = "‘cellular_component’ terms";
+	public static final String MF_COLUMN_NAME = "‘molecular_function’ terms";
+	
+	public static final String TERM_NAME_COL = "term name";
+	public static final String TERM_NAMESPACE_COL = "term namespace";
+	public static final String TERM_PVAL_COL = "term p-value";
 	
 	private final String bridgeDbFileName;
 	private final String idColumnName;
 	private final String idType;
 	private final String moduleColumnName;
+	private final CyGroupManager groupManager;
+	private final CyGroupFactory groupFactory;
+	
 	private Map<String, GoTerm> ontologyMap;
 	
 	/**
@@ -157,18 +168,22 @@ public class GoEnrichmentTask extends AbstractTableTask {
 	 * @param idType  full name (according to BridgeDB) of the IDs
 	 */
     public GoEnrichmentTask(
-    		CyTable nodeTable,
+    		CyNetwork network,
     		String bridgeDbFileName,
     		String idColumnName,
     		String idType,
-    		String moduleColumnName) {
-    	// set the `table' field
-    	super(nodeTable);
+    		String moduleColumnName,
+    		CyGroupManager groupManager,
+    		CyGroupFactory groupFactory) {
+    	// set the `network' field
+    	super(network);
     	// set the other parameters as fields
     	this.bridgeDbFileName = bridgeDbFileName;
     	this.idColumnName = idColumnName;
     	this.idType = idType;
     	this.moduleColumnName = moduleColumnName;
+    	this.groupManager = groupManager;
+    	this.groupFactory = groupFactory;
     }
     
     public static String[] getSupportedIdTypes() {
@@ -191,6 +206,7 @@ public class GoEnrichmentTask extends AbstractTableTask {
      * @throws IllegalArgumentException  if a column of another type is found
      */
     private void createNodeColumn(String name, Class<?> type, Class<?> elementType) {
+    	CyTable table = network.getDefaultNodeTable();
     	// identify the column if it exists already
     	CyColumn column = table.getColumn(name);
     	// if there was no column with this name yet
@@ -226,9 +242,9 @@ public class GoEnrichmentTask extends AbstractTableTask {
     }
     
 	/**
-     * Find GO terms enriched in the network and add them as group nodes.
+     * Find GO terms enriched in the network and add them as CyGroups.
      * 
-	 * @throws IOException  if errors in 
+	 * @throws IOException  if errors occur looking up the terms
      */
 	@Override
 	public void run(final TaskMonitor taskMonitor) throws IOException {
@@ -282,6 +298,7 @@ public class GoEnrichmentTask extends AbstractTableTask {
 //			sources.add(new Xref(id, idDataSource));
 //		}
 //    	// query the GO terms for all of the ids
+		// TODO rename to goAnnotationMap or something
 //    	Map<Xref, Set<Xref>> goTermMap;
 //		try {
 //			goTermMap = mapper.mapID(
@@ -300,7 +317,14 @@ public class GoEnrichmentTask extends AbstractTableTask {
 			createNodeColumn(colName, List.class, String.class);
 		}
 		
-		for (CyRow row : table.getAllRows()) {
+		// create columns in the node table to represent properties of GO terms
+		createNodeColumn(TERM_NAME_COL, String.class, null);
+		createNodeColumn(TERM_NAMESPACE_COL, String.class, null);
+		createNodeColumn(TERM_PVAL_COL, Double.class, null);
+		
+		// TODO handle pre-existing groups
+		
+		for (CyRow row : network.getDefaultNodeTable().getAllRows()) {
 			// start with an empty list for each term column
 			Set<String> bpTerms = new HashSet<String>();
 			Set<String> ccTerms = new HashSet<String>();
@@ -331,14 +355,15 @@ public class GoEnrichmentTask extends AbstractTableTask {
 				} else if (term.namespace == GoNamespace.MOLECULAR_FUNCTION) {
 					mfTerms.add(term.canonicalId);
 				}
+				// TODO add the term to a set if this node is part of the module
 			}
 			// set the values of the term columns for this row
 			row.set(BP_COLUMN_NAME, new ArrayList<String>(bpTerms));
 			row.set(CC_COLUMN_NAME, new ArrayList<String>(ccTerms));
 			row.set(MF_COLUMN_NAME, new ArrayList<String>(mfTerms));
-		}		
+		}
 		
-		// TODO create a group node for each term occurring in the module
+		// TODO loop over the nodes again to add each node to the annotated groups and their parents
 		
 		// TODO test overrepresentation using the hypergeometric distribution
 		
