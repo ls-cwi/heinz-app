@@ -70,23 +70,66 @@ public class GoEnrichmentTask extends AbstractNetworkTask {
 		// loop over the lines of the file
 		BufferedReader reader = 
 				new BufferedReader(new InputStreamReader(oboFile, "UTF-8"));
+		// create empty variables to hold properties of a (term) stanza
+		String stanzaHeader = null;
+		String id = null;
+		List<String> alt_ids = new ArrayList<String>();
+		String name = null;
+		GoNamespace namespace = null;
+		// loop over the lines in the OBO file
 		String line;
 		while ((line = reader.readLine()) != null) {
-			// when the start of a term entry is encountered
-			if (line.equals("[Term]")) {
-				// empty the variables for the fields
-				String id = null;
-				List<String> alt_ids = new ArrayList<String>();
-				String name = null;
-				GoNamespace namespace = null;
-				// loop over the lines of the entry
-				while ((line = reader.readLine()) != null) {
-					// if this line marks the end of the entry
-					if (line.equals("")) {
-						// break out of the loop
-						break;
+			// if the line is a comment or a blank line
+			if (line.startsWith("!") || line.equals("")) {
+				// skip to the next line
+				continue;
+			// if this line marks the start of a new stanza
+			} else if (line.startsWith("[") && line.endsWith("]")) {
+				// if this header terminates a preceding Term stanza
+				if (stanzaHeader != null && stanzaHeader.equals("[Term]")) {
+					// check if all required fields have been read for this term
+					if (id == null) {
+						throw new IOException(
+								"Encountered term without id in ontology file");
+					} else if (name == null) {
+						throw new IOException(
+								"Encountered term without name in ontology file");
+					} else if (namespace == null) {
+						throw new IOException(
+								"Encountered term without namespace in ontology file");
 					}
-					// split the field into the name and the value
+					// construct an object for the term
+					GoTerm term = new GoTerm(id, namespace, name);
+					// test if the id is already in the map before adding it
+					if (goTermMap.containsKey(id)) {
+						throw new IOException(
+								"Term ID " + id + " found multiple times in ontology file.");
+					}
+					goTermMap.put(id, term);
+					// do the same for any alternative ids
+					for (String alt_id : alt_ids) {
+						if (goTermMap.containsKey(alt_id)) {
+							throw new IOException(
+									"Term ID " + alt_id + " found multiple times in ontology file.");
+						}
+						goTermMap.put(alt_id, term);
+					}
+				}
+				// replace the current stanza header
+				stanzaHeader = line;
+				// empty the variables fields from the previous stanza
+				id = null;
+				alt_ids = new ArrayList<String>();
+				name = null;
+				namespace = null;
+			// this line must be a tag-value pair, of the form
+			// <tag>: <value> {<trailing modifiers>} ! <comment>
+			} else {
+				// if currently in a term stanza
+				if (stanzaHeader != null && stanzaHeader.equals("[Term]")) {
+					// TODO strip off trailing modifiers in unescaped {} and end-of-line comments
+					// split up the tag-value pair
+					// TODO handle escaped colons
 					String[] field = line.split(": ", 2);
 					// check if the field is one of the required ones and handle it
 					if (field[0].equals("id")) {
@@ -105,36 +148,9 @@ public class GoEnrichmentTask extends AbstractNetworkTask {
 						} else {
 							throw new IOException(
 									"Unexpected namespace in ontology file: " + 
-									field[1]);
+											field[1]);
 						}
 					}
-				}
-				// check if all required fields have been read for the entry
-				if (id == null) {
-					throw new IOException(
-							"Encountered entry without id in ontology file");
-				} else if (name == null) {
-					throw new IOException(
-							"Encountered entry without name in ontology file");
-				} else if (namespace == null) {
-					throw new IOException(
-							"Encountered entry without namespace in ontology file");
-				}
-				// now the entry has been parsed, construct the object
-				GoTerm term = new GoTerm(id, namespace, name);
-				// test if the id is already in the map before adding it
-				if (goTermMap.containsKey(id)) {
-					throw new IOException(
-							"GO ID " + id + " found multiple times in ontology file.");
-				}
-				goTermMap.put(id, term);
-				// do the same for any alternative ids
-				for (String alt_id : alt_ids) {
-					if (goTermMap.containsKey(alt_id)) {
-						throw new IOException(
-								"GO ID " + alt_id + " found multiple times in ontology file.");
-					}
-					goTermMap.put(alt_id, term);
 				}
 			}
 		}
