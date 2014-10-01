@@ -44,7 +44,8 @@ public class GoEnrichmentTask extends AbstractNetworkTask {
 	
 	private static class GoTerm {
 		
-		// TODO add a list of parents too
+		// TODO add a list of direct children too,
+		//      to recurse from the top and collect all ancestors 
 		public final String canonicalId;
 		public final GoNamespace namespace;
 		public final String name;
