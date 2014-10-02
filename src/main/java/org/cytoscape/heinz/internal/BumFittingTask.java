@@ -10,12 +10,14 @@ import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 
-import org.cytoscape.task.AbstractTableColumnTask;
+import org.cytoscape.task.AbstractNetworkTask;
 import org.cytoscape.work.TaskMonitor;
 import org.cytoscape.work.Tunable;
+import org.cytoscape.model.CyNetwork;
+import org.cytoscape.model.CyNode;
 import org.cytoscape.model.CyTable;
 import org.cytoscape.model.CyRow;
-import org.cytoscape.model.CyColumn;
+import org.cytoscape.group.CyGroupManager;
 
 
 /**
@@ -24,42 +26,54 @@ import org.cytoscape.model.CyColumn;
  * The estimated parameters (lambda and a) are saved as columns in
  * the network table.
  */
-public class BumFittingTask extends AbstractTableColumnTask {
+public class BumFittingTask extends AbstractNetworkTask {
 	
-	private final CyRow networkTableRow;
+	private final String pValueColumnName;
 	private final int starts;
 	private final String serverHost;
 	private final int serverPort;
+	private final CyGroupManager groupManager;
 	
 	@Tunable(description="Generate plots to evaluate the fit")
 	public boolean showPlots = true;
+
 	
 	/**
 	 * Initialise the task, obtaining required parameters.
 	 * 
-	 * @param pValueColumn  node table column holding the p-values to fit to
+	 * @param network  the network to work on
+	 * @param pValueColumnName  name of the node table column holding the p-values to fit to
 	 * @param starts  number of starts for model fitting
 	 * @param networkTableRow  network table row to write the results to
 	 * @param serverHost  the host name of the model fitting server
 	 * @param serverPort  the port number of the model fitting server
+	 * @param groupManager  an instance of CyGroupManager
 	 */
     public BumFittingTask(
-    		CyColumn pValueColumn,
-    		CyRow networkTableRow,
+    		CyNetwork network,
+    		String pValueColumnName,
     		int starts,
     		String serverHost,
-    		int serverPort) {
-    	// set the `column' field
-    	super(pValueColumn);
+    		int serverPort,
+    		CyGroupManager groupManager) {
+    	// set the `network' field
+    	super(network);
     	// set the other parameters as fields
-    	if (networkTableRow == null) {
+    	if (network.getDefaultNodeTable().getColumn(pValueColumnName) == null) {
     		throw new IllegalArgumentException(
-    				"No network table row to write the BUM parameters to.");
+    				"Column ‘" +
+    				pValueColumnName +
+    				"’ does not exist in node table.");
     	}
-    	this.networkTableRow = networkTableRow;
+    	this.pValueColumnName = pValueColumnName;
     	this.starts = starts;
     	this.serverHost = serverHost;
-    	this.serverPort = serverPort;	
+    	this.serverPort = serverPort;
+    	if (groupManager == null) {
+    		throw new IllegalArgumentException(
+    				"No GroupManager received by BumFittingTask");
+    	}
+    	this.groupManager = groupManager;
     }
 
 	/**
@@ -80,11 +94,34 @@ public class BumFittingTask extends AbstractTableColumnTask {
 			
 			taskMonitor.setStatusMessage(
 					"Sending p-values to the model fitting server");
-			// unbox the CyColumn with a List of Double instances to a double[]
-			List<Double> pValueList = column.getValues(Double.class);
-			double[] pValueArray = new double[pValueList.size()];
+			// read the p-values for all nodes into an array
+			List<CyNode> nodeList = network.getNodeList();
+			double[] pValueArray = new double[network.getNodeCount()];
+			// test for something that should never happen
+			if (nodeList.size() != pValueArray.length) {
+				throw new RuntimeException(
+						"Number of nodes in node list is not equal to node count of the network");
+			}
+			// index both the node list and the p-value array
 			for (int i = 0; i < pValueArray.length; ++i) {
-				pValueArray[i] = pValueList.get(i).doubleValue();
+				Double pValue = TableUtils.getNodeAttribute(
+						nodeList.get(i),
+						network,
+						pValueColumnName,
+						Double.class,
+						groupManager);
+				if (!(pValue >= 0.0 && pValue <= 1.0)) {
+					throw new IllegalArgumentException(
+							"Invalid p-value for node ‘" +
+							TableUtils.getNodeAttribute(
+									nodeList.get(i),
+									network,
+									"name",
+									String.class,
+									groupManager) +
+							"’.");
+				}
+				pValueArray[i] = pValue.doubleValue();
 			}
 			// send the p-values to the server
 			client.sendPValues(pValueArray);
@@ -102,9 +139,10 @@ public class BumFittingTask extends AbstractTableColumnTask {
 
 			taskMonitor.setStatusMessage(
 					"Writing fitted BUM model parameters to the network table");
-			CyTable networkTable = networkTableRow.getTable();
+			CyTable networkTable = network.getDefaultNetworkTable();
+			CyRow networkTableRow = networkTable.getRow(network.getSUID());
 
-			String lambdaColumnName = column.getName() + ".BUM.lambda";
+			String lambdaColumnName = pValueColumnName + ".BUM.lambda";
 			// if the column does not yet exist in the network table 
 			if (networkTable.getColumn(lambdaColumnName) == null) {
 				// create the column
@@ -121,11 +159,9 @@ public class BumFittingTask extends AbstractTableColumnTask {
 				}
 			}
 			// write the fitted value to the network table
-			networkTableRow.set(
-					lambdaColumnName,
-					client.getLambda());
+			networkTableRow.set(lambdaColumnName, client.getLambda());
 
-			String aColumnName = column.getName() + ".BUM.a";
+			String aColumnName = pValueColumnName + ".BUM.a";
 			// if the column does not yet exist in the network table 
 			if (networkTable.getColumn(aColumnName) == null) {
 				// create the column
@@ -142,9 +178,7 @@ public class BumFittingTask extends AbstractTableColumnTask {
 				}
 			}
 			// write the fitted value to the network table
-			networkTableRow.set(
-					aColumnName,
-					client.getA());
+			networkTableRow.set(aColumnName, client.getA());
 
 			if (showPlots) {
 				taskMonitor.setStatusMessage("Displaying plots");

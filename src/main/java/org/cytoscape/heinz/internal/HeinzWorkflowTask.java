@@ -173,13 +173,11 @@ public class HeinzWorkflowTask extends AbstractNetworkTask {
 		
 		if (fitBum) {
 			Task bumFittingTask = new BumFittingTask(
-					network.getDefaultNodeTable().getColumn(
-							pValueColumnName.getSelectedValue()),
-					network.getTable(
-							CyNetwork.class, CyNetwork.LOCAL_ATTRS).getRow(
-									network.getSUID()),
+					network,
+					pValueColumnName.getSelectedValue(),
 					bumFittingStarts,
-					bumServerHost, bumServerPort);
+					bumServerHost, bumServerPort,
+					groupManager);
 			workflowTaskIterator.append(bumFittingTask);
 		}
 		
