@@ -11,7 +11,6 @@ import org.cytoscape.group.CyGroupFactory;
 import org.cytoscape.group.CyGroupManager;
 import org.cytoscape.model.CyNetwork;
 import org.cytoscape.model.CyColumn;
-import org.cytoscape.model.CyRow;
 import org.cytoscape.work.Task;
 import org.cytoscape.work.TaskIterator;
 import org.cytoscape.work.TaskMonitor;
@@ -166,29 +165,6 @@ public class HeinzWorkflowTask extends AbstractNetworkTask {
 		if (pValueColumnName.getSelectedValue() == null) {
 			throw new IllegalArgumentException("No p-value column selected.");
 		}
-		// Check if the p-value column consists of numbers between 0 and 1
-		for (CyRow row : network.getDefaultNodeTable().getAllRows()) {
-			// stop if Cancel was clicked
-			if (cancelled) { return; }
-			// test if a p-value exists for this row
-			if (!row.isSet(pValueColumnName.getSelectedValue())) {
-				throw new IllegalArgumentException(
-						"p-value for node ‘" +
-						row.get(CyNetwork.NAME, String.class) +
-						"’ missing.");
-			}
-			// test if the p-value is in the valid range
-			double pValue =  row.get(pValueColumnName.getSelectedValue(), Double.class);
-			if (!(pValue >= 0.0 && pValue <= 1.0)) {
-				throw new IllegalArgumentException(
-						"Invalid p-value for node ‘" +
-						row.get(CyNetwork.NAME, String.class) +
-						"’.");
-			}
-		}
-		
-		// stop if Cancel was clicked
-		if (cancelled) { return; }
 		
 		taskMonitor.setStatusMessage("Setting up the workflow");
 		
@@ -217,7 +193,8 @@ public class HeinzWorkflowTask extends AbstractNetworkTask {
 					null,
 					null,
 					heinzServerHost,
-					heinzServerPort);
+					heinzServerPort,
+					groupManager);
 		} else {
 			heinzTask = new HeinzTask(
 					network,
@@ -227,7 +204,8 @@ public class HeinzWorkflowTask extends AbstractNetworkTask {
 					lambda.getValue(),
 					a.getValue(),
 					heinzServerHost,
-					heinzServerPort);
+					heinzServerPort,
+					groupManager);
 		}
 		workflowTaskIterator.append(heinzTask);
 		
@@ -244,6 +222,10 @@ public class HeinzWorkflowTask extends AbstractNetworkTask {
 					groupManager,
 					groupFactory);
 			workflowTaskIterator.append(goEnrichmentTask);
+		}
+		
+		if (cancelled) {
+			return;
 		}
 		
 		// append the tasks to the calling task iterator

@@ -10,10 +10,12 @@ import java.util.List;
 import java.util.Locale;
 import java.nio.charset.Charset;
 
-import org.cytoscape.model.CyTable;
-import org.cytoscape.model.CyRow;
-import org.cytoscape.model.CyColumn;
+import org.cytoscape.model.CyNetwork;
+import org.cytoscape.model.CyNode;
 import org.cytoscape.model.CyEdge;
+import org.cytoscape.model.CyTable;
+import org.cytoscape.model.CyColumn;
+import org.cytoscape.group.CyGroupManager;
 
 
 /**
@@ -21,21 +23,25 @@ import org.cytoscape.model.CyEdge;
  */
 public class SwHeinzClient extends AbstractSwClient implements HeinzClient {
 	
+	private final CyGroupManager groupManager;
+	
 	/**
 	 * Initialise a connection to a Heinz server.
 	 * 
 	 * @param host  the host name of the server
 	 * @param port  the port number to connect to
+	 * @param groupManager  an instance of CyGroupManager
 	 * 
 	 * @throws IOException  if a connection to a compatible Heinz server cannot be made
 	 * @throws UnknownHostException  if the server’s IP address could not be determined
 	 */
-	public SwHeinzClient(String host, int port) throws
+	public SwHeinzClient(String host, int port, CyGroupManager groupManager) throws
 			IOException, UnknownHostException {
 		
 		// open a connection to the server,
 		// and set outputStream an inputStream
 		super(host, port);
+		this.groupManager = groupManager;
 		
 		try {
 			// enable pre-processing, as will likely be the default in the future
@@ -69,13 +75,15 @@ public class SwHeinzClient extends AbstractSwClient implements HeinzClient {
      */
 	@Override
 	public void sendNodeTable(
-			final CyTable nodeTable,
+			final List<CyNode> nodeList,
+			final CyNetwork network,
 			final String pValueColumnName)
 					throws IOException {
 		
+		CyTable nodeTable = network.getDefaultNodeTable();
 		// Check if the table has the node SUIDs as its primary key column
 		if (
-				nodeTable.getPrimaryKey().getName() != "SUID" ||
+				(!nodeTable.getPrimaryKey().getName().equals("SUID")) ||
 				nodeTable.getPrimaryKey().getType() != Long.class) {
 			throw new IllegalArgumentException(
 					"Primary key of node table (" +
@@ -91,13 +99,31 @@ public class SwHeinzClient extends AbstractSwClient implements HeinzClient {
 		// start the file with a commented header line
 		writer.format("#node\tpval\n");
 		// for each row in the node table
-		for (CyRow nodeRow : nodeTable.getAllRows()) {
+		for (CyNode node : nodeList) {
+			// test if the p-value is in the valid range
+			double pValue =  TableUtils.getNodeAttribute(
+					node,
+					network,
+					pValueColumnName,
+					Double.class,
+					groupManager);
+			if (!(pValue >= 0.0 && pValue <= 1.0)) {
+				throw new IllegalArgumentException(
+						"Invalid p-value for node ‘" +
+						TableUtils.getNodeAttribute(
+								node,
+								network,
+								"name",
+								String.class,
+								groupManager) +
+						"’.");
+			}
 			// write the line for this node table row to the byte array
 			writer.format(
 					(Locale) null,
 					"%d\t%.15g\n",
-					nodeRow.get("SUID", Long.class),
-					nodeRow.get(pValueColumnName, Double.class));
+					node.getSUID(),
+					pValue);
 		}
 		
 		// send the file to the server as the payload of a message
@@ -113,7 +139,7 @@ public class SwHeinzClient extends AbstractSwClient implements HeinzClient {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public void sendEdgeTable(List<CyEdge> edgeList) throws IOException {
+	public void sendEdgeTable(List<CyEdge> edgeList, CyNetwork network) throws IOException {
 		
 		// make an object to build up a byte array in a growing buffer
 		ByteArrayOutputStream fileContents = new ByteArrayOutputStream();

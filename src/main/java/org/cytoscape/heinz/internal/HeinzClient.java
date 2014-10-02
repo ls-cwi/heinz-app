@@ -3,8 +3,10 @@ package org.cytoscape.heinz.internal;
 import java.io.IOException;
 import java.util.List;
 
-import org.cytoscape.model.CyTable;
+import org.cytoscape.model.CyNetwork;
+import org.cytoscape.model.CyNode;
 import org.cytoscape.model.CyEdge;
+import org.cytoscape.model.CyTable;
 
 /**
  * Provides the HeinzTask with a way to run Heinz.
@@ -26,7 +28,8 @@ public interface HeinzClient {
 	 * 
 	 * @throws IOException  if the table cannot be written successfully
 	 */
-	public void sendNodeTable(CyTable nodeTable, String pValueColumnName)
+	public void sendNodeTable(
+			List<CyNode> nodeList, CyNetwork network, String pValueColumnName)
 			throws IOException;
 	
 	/**
@@ -38,7 +41,8 @@ public interface HeinzClient {
 	 * 
 	 * @see org.cytoscape.model.CyNetwork#getEdgeList()
 	 */
-	public void sendEdgeTable(List<CyEdge> edgeList) throws IOException;
+	public void sendEdgeTable(List<CyEdge> edgeList, CyNetwork network)
+			throws IOException;
 	
 	/**
 	 * Set/write the BUM mixture parameter for the Heinz run.

@@ -5,6 +5,7 @@ import java.io.IOException;
 
 import org.cytoscape.task.AbstractNetworkTask;
 import org.cytoscape.work.TaskMonitor;
+import org.cytoscape.group.CyGroupManager;
 import org.cytoscape.model.CyNetwork;
 import org.cytoscape.model.CyRow;
 import org.cytoscape.model.CyNode;
@@ -23,6 +24,8 @@ public class HeinzTask extends AbstractNetworkTask {
 	private Double lambda = null;
 	private Double a = null;
 	
+	private final CyGroupManager groupManager;
+	
 	/**
 	 * Initialise the task, setting the required parameters as fields.
 	 * 
@@ -39,6 +42,7 @@ public class HeinzTask extends AbstractNetworkTask {
 	 * @param a  the BUM model shape parameter or null
 	 * @param serverHost  the host name of the Heinz server
 	 * @param serverPort  the port number of the Heinz server
+	 * @param groupManager  an instance of CyGroupManager
 	 */
 	public HeinzTask(
 			CyNetwork network,
@@ -48,7 +52,8 @@ public class HeinzTask extends AbstractNetworkTask {
 			Double lambda,
 			Double a,
 			String serverHost,
-			int serverPort) {
+			int serverPort,
+			CyGroupManager groupManager) {
 		// The superclass constructor will set the network field
 		super(network);
 		if (pValueColumnName == null) {
@@ -70,6 +75,7 @@ public class HeinzTask extends AbstractNetworkTask {
 		this.a = a;
 		this.serverHost = serverHost;
 		this.serverPort = serverPort;
+		this.groupManager = groupManager;
 	}
 	
     /**
@@ -83,24 +89,6 @@ public class HeinzTask extends AbstractNetworkTask {
 		
 		// Give the task a title (shown in status monitor)
 		taskMonitor.setTitle("Heinz");
-		
-		taskMonitor.setStatusMessage("Validating parameters");
-		// Check if the p-value column consists of numbers between 0 and 1
-		for (CyRow row : network.getDefaultNodeTable().getAllRows()) {
-			if (!row.isSet(pValueColumnName)) {
-				throw new IllegalArgumentException(
-						"p-value for node ‘" +
-						row.get(CyNetwork.NAME, String.class) +
-						"’ missing.");
-			}
-			double pValue =  row.get(pValueColumnName, Double.class);
-			if (!(pValue > 0.0 && pValue < 1.0)) {
-				throw new IllegalArgumentException(
-						"Invalid p-value for node ‘" +
-						row.get(CyNetwork.NAME, String.class) +
-						"’.");
-			}
-		}
 		
 		CyRow networkTableRow = 
 				network.getDefaultNetworkTable().getRow(network.getSUID());
@@ -137,7 +125,7 @@ public class HeinzTask extends AbstractNetworkTask {
 		if (cancelled) { return; }
 		
 		taskMonitor.setStatusMessage("Connecting to the Heinz server");
-		HeinzClient client = new SwHeinzClient(serverHost, serverPort);
+		HeinzClient client = new SwHeinzClient(serverHost, serverPort, groupManager);
 		
 		try {
 			
@@ -154,7 +142,8 @@ public class HeinzTask extends AbstractNetworkTask {
 
 			taskMonitor.setStatusMessage("Sending node table to Heinz");
 			client.sendNodeTable(
-					network.getDefaultNodeTable(),
+					network.getNodeList(),
+					network,
 					pValueColumnName);
 			taskMonitor.setProgress(0.06);
 			
@@ -162,7 +151,7 @@ public class HeinzTask extends AbstractNetworkTask {
 			if (cancelled) { return; }
 			
 			taskMonitor.setStatusMessage("Sending edge table to Heinz");
-			client.sendEdgeTable(network.getEdgeList());
+			client.sendEdgeTable(network.getEdgeList(), network);
 			taskMonitor.setProgress(0.10);
 			
 			// skip to `finally` and stop if Cancel was clicked
