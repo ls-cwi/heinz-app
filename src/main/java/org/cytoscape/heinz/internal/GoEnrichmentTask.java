@@ -58,6 +58,61 @@ public class GoEnrichmentTask extends AbstractNetworkTask {
 		
 	}
 	
+	public static final String BP_COLUMN_NAME = "‘biological process’ terms";
+	public static final String CC_COLUMN_NAME = "‘cellular_component’ terms";
+	public static final String MF_COLUMN_NAME = "‘molecular_function’ terms";
+	
+	public static final String TERM_NAME_COL = "term name";
+	public static final String TERM_NAMESPACE_COL = "term namespace";
+	public static final String TERM_PVAL_COL = "term p-value";
+	
+	private final String bridgeDbFileName;
+	private final String idColumnName;
+	private final String idType;
+	private final String moduleColumnName;
+	private final CyGroupManager groupManager;
+	private final CyGroupFactory groupFactory;
+	
+	private Map<String, GoTerm> ontologyMap;
+	
+	/**
+ 	 * Initialise the task, obtaining required parameters.
+ 	 * 
+	 * @param nodeTable  the node table of the full network
+	 * @param bridgeDbFilename  filename of the BridgeDerby database to use
+	 * @param idColumnName  name of the node table column containing gene IDs
+	 * @param idType  full name (according to BridgeDB) of the IDs
+	 */
+    public GoEnrichmentTask(
+    		CyNetwork network,
+    		String bridgeDbFileName,
+    		String idColumnName,
+    		String idType,
+    		String moduleColumnName,
+    		CyGroupManager groupManager,
+    		CyGroupFactory groupFactory) {
+    	// set the `network' field
+    	super(network);
+    	// set the other parameters as fields
+    	this.bridgeDbFileName = bridgeDbFileName;
+    	this.idColumnName = idColumnName;
+    	this.idType = idType;
+    	this.moduleColumnName = moduleColumnName;
+    	this.groupManager = groupManager;
+    	this.groupFactory = groupFactory;
+    }
+    
+    public static String[] getSupportedIdTypes() {
+    	BioDataSource.init();
+    	Set<DataSource> availableDbs = 
+    			DataSource.getFilteredSet(true, false, null);
+    	List<String> availableDbNames = new ArrayList<String>();
+    	for (DataSource db : availableDbs) {
+    		availableDbNames.add(db.getFullName());
+    	}
+    	return availableDbNames.toArray(new String[0]);
+    }
+    
 	/**
 	 * Parse term information from a Gene Ontology ‘.obo’ file.
 	 * 
@@ -158,61 +213,6 @@ public class GoEnrichmentTask extends AbstractNetworkTask {
 		
 		return goTermMap;
 	}
-	
-	public static final String BP_COLUMN_NAME = "‘biological process’ terms";
-	public static final String CC_COLUMN_NAME = "‘cellular_component’ terms";
-	public static final String MF_COLUMN_NAME = "‘molecular_function’ terms";
-	
-	public static final String TERM_NAME_COL = "term name";
-	public static final String TERM_NAMESPACE_COL = "term namespace";
-	public static final String TERM_PVAL_COL = "term p-value";
-	
-	private final String bridgeDbFileName;
-	private final String idColumnName;
-	private final String idType;
-	private final String moduleColumnName;
-	private final CyGroupManager groupManager;
-	private final CyGroupFactory groupFactory;
-	
-	private Map<String, GoTerm> ontologyMap;
-	
-	/**
- 	 * Initialise the task, obtaining required parameters.
- 	 * 
-	 * @param nodeTable  the node table of the full network
-	 * @param bridgeDbFilename  filename of the BridgeDerby database to use
-	 * @param idColumnName  name of the node table column containing gene IDs
-	 * @param idType  full name (according to BridgeDB) of the IDs
-	 */
-    public GoEnrichmentTask(
-    		CyNetwork network,
-    		String bridgeDbFileName,
-    		String idColumnName,
-    		String idType,
-    		String moduleColumnName,
-    		CyGroupManager groupManager,
-    		CyGroupFactory groupFactory) {
-    	// set the `network' field
-    	super(network);
-    	// set the other parameters as fields
-    	this.bridgeDbFileName = bridgeDbFileName;
-    	this.idColumnName = idColumnName;
-    	this.idType = idType;
-    	this.moduleColumnName = moduleColumnName;
-    	this.groupManager = groupManager;
-    	this.groupFactory = groupFactory;
-    }
-    
-    public static String[] getSupportedIdTypes() {
-    	BioDataSource.init();
-    	Set<DataSource> availableDbs = 
-    			DataSource.getFilteredSet(true, false, null);
-    	List<String> availableDbNames = new ArrayList<String>();
-    	for (DataSource db : availableDbs) {
-    		availableDbNames.add(db.getFullName());
-    	}
-    	return availableDbNames.toArray(new String[0]);
-    }
     
     /**
      * Create a new node table column, or overwrite an existing same-type one. 
