@@ -272,7 +272,7 @@ public class GoEnrichmentTask extends AbstractNetworkTask {
 		taskMonitor.setStatusMessage(
 				"Loading the Gene Ontology");
 		
-		ontologyMap = parseOboFile(getClass().getResourceAsStream("/data/go.obo"));
+		ontologyMap = parseOboFile(getClass().getResourceAsStream("/data/go-basic.obo"));
 		
 		taskMonitor.setStatusMessage(
 				"Loading the selected Bridge Derby database");
