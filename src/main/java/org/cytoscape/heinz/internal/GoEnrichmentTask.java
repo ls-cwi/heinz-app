@@ -46,10 +46,13 @@ public class GoEnrichmentTask extends AbstractNetworkTask {
 		
 		// TODO add a list of direct children too,
 		//      to recurse from the top and collect all ancestors 
-		public final String canonicalId;
-		public final GoNamespace namespace;
-		public final String name;
+		public String canonicalId;
+		public GoNamespace namespace;
+		public String name;
 		
+		public GoTerm() {
+			this(null, null, null);
+		}
 		public GoTerm(String canonicalId, GoNamespace namespace, String name) {
 			this.canonicalId = canonicalId;
 			this.namespace = namespace;
@@ -126,85 +129,120 @@ public class GoEnrichmentTask extends AbstractNetworkTask {
 		// loop over the lines of the file
 		BufferedReader reader = 
 				new BufferedReader(new InputStreamReader(oboFile, "UTF-8"));
-		// create empty variables to hold properties of a (term) stanza
+		// create an empty term object to hold the properties of the first stanza
+		GoTerm term = new GoTerm();
+		// keep track of the type of the current stanza
 		String stanzaHeader = null;
-		String id = null;
-		List<String> alt_ids = new ArrayList<String>();
-		String name = null;
-		GoNamespace namespace = null;
 		// loop over the lines in the OBO file
 		String line;
+		int lineNumber = 0;
 		while ((line = reader.readLine()) != null) {
+			lineNumber++;
 			// if the line is a comment or a blank line
 			if (line.startsWith("!") || line.equals("")) {
 				// skip to the next line
 				continue;
 			// if this line marks the start of a new stanza
 			} else if (line.startsWith("[") && line.endsWith("]")) {
+				// TODO do this for the stanza terminated by end of file too
 				// if this header terminates a preceding Term stanza
 				if (stanzaHeader != null && stanzaHeader.equals("[Term]")) {
-					// check if all required fields have been read for this term
-					if (id == null) {
+					// check if all required fields have been read for the previous term
+					if (term.canonicalId == null)
 						throw new IOException(
-								"Encountered term without id in ontology file");
-					} else if (name == null) {
+								"Encountered term without id in ontology file" +
+								" (line " + lineNumber + ")");
+					if (term.name == null)
 						throw new IOException(
-								"Encountered term without name in ontology file");
-					} else if (namespace == null) {
+								"Encountered term without name in ontology file"+
+								" (line " + lineNumber + ")");
+					if (term.namespace == null)
 						throw new IOException(
-								"Encountered term without namespace in ontology file");
-					}
-					// construct an object for the term
-					GoTerm term = new GoTerm(id, namespace, name);
-					// test if the id is already in the map before adding it
-					if (goTermMap.containsKey(id)) {
-						throw new IOException(
-								"Term ID " + id + " found multiple times in ontology file.");
-					}
-					goTermMap.put(id, term);
-					// do the same for any alternative ids
-					for (String alt_id : alt_ids) {
-						if (goTermMap.containsKey(alt_id)) {
-							throw new IOException(
-									"Term ID " + alt_id + " found multiple times in ontology file.");
-						}
-						goTermMap.put(alt_id, term);
-					}
+								"Encountered term without namespace in ontology file"+
+								" (line " + lineNumber + ")");
+					// create an object for the properties of the next term
+					term = new GoTerm();
 				}
 				// replace the current stanza header
 				stanzaHeader = line;
-				// empty the variables fields from the previous stanza
-				id = null;
-				alt_ids = new ArrayList<String>();
-				name = null;
-				namespace = null;
 			// this line must be a tag-value pair, of the form
 			// <tag>: <value> {<trailing modifiers>} ! <comment>
 			} else {
 				// if currently in a term stanza
 				if (stanzaHeader != null && stanzaHeader.equals("[Term]")) {
-					// TODO strip off trailing modifiers in unescaped {} and end-of-line comments
-					// split up the tag-value pair
-					// TODO handle escaped colons
-					String[] field = line.split(": ", 2);
+					// strip off end-of-line comments, after an unescaped !
+					line = line.replaceFirst("([^\\\\])!.*", "$1");
+					// strip off trailing modifiers in (unescaped) braces
+					line = line.replaceFirst("([^\\\\])\\{.*[^\\\\]\\} *$", "$1");
+					// split up the tag-value pair at the first unescaped
+					// colon followed by a space
+					String fieldTag =
+							line.replaceFirst("([^\\\\]): .*", "$1").trim();
+					String fieldVal =
+							line.replaceFirst(".*[^\\\\]: (.*)", "$1").trim();
 					// check if the field is one of the required ones and handle it
-					if (field[0].equals("id")) {
-						id = field[1];
-					} else if (field[0].equals("alt_id")) {
-						alt_ids.add(field[1]);
-					} else if (field[0].equals("name")) {
-						name = field[1];
-					} else if (field[0].equals("namespace")) {
-						if (field[1].equals("biological_process")) {
-							namespace = GoNamespace.BIOLOGICAL_PROCESS;
-						} else if (field[1].equals("cellular_component")) {
-							namespace = GoNamespace.CELLULAR_COMPONENT;
-						} else if (field[1].equals("molecular_function")) {
-							namespace = GoNamespace.MOLECULAR_FUNCTION;
+					if (fieldTag.equals("id")) {
+						if (term.canonicalId != null)
+							throw new IOException(
+									"Term " +
+									term.canonicalId +
+									" has multiple IDs.");
+						term.canonicalId = fieldVal;
+						// if an initialised term is already in the map for this id
+						if (
+								goTermMap.get(fieldVal) != null &&
+								goTermMap.get(fieldVal).canonicalId != null)
+							throw new IOException(
+									"Multiple entries for " +
+									fieldVal +
+									" in Gene Ontology.");
+						// add the object to the map for this id
+						goTermMap.put(fieldVal, term);
+					} else if (fieldTag.equals("alt_id")) {
+						// if an initialised term is already in the map for this id
+						if (
+								goTermMap.get(fieldVal) != null &&
+								goTermMap.get(fieldVal).canonicalId != null)
+							throw new IOException(
+									"Multiple entries for " +
+									fieldVal +
+									" in Gene Ontology.");
+						// if the alt_id has been annotated as some term’s parent
+						if (
+								goTermMap.get(fieldVal) != null &&
+								goTermMap.get(fieldVal).childSet.size() > 0)
+							throw new IOException(
+									"Non-canonical id " +
+									fieldVal +
+									" listed as parent of " +
+									// the canonical id of one element of the child set
+									goTermMap.get(fieldVal).childSet.toArray(new GoTerm[0])[0].canonicalId +
+									" in Gene Ontology.");
+						// add the object to the map for this id too
+						goTermMap.put(fieldVal, term);
+					} else if (fieldTag.equals("name")) {
+						if (term.name != null)
+							throw new IOException(
+									"Term " +
+									term.canonicalId +
+									" has multiple names.");
+						term.name = fieldVal;
+					} else if (fieldTag.equals("namespace")) {
+						if (term.namespace != null)
+							throw new IOException(
+									"Term " +
+									term.canonicalId +
+									" has multiple namespaces.");
+						if (fieldVal.equals("biological_process")) {
+							term.namespace = GoNamespace.BIOLOGICAL_PROCESS;
+						} else if (fieldVal.equals("cellular_component")) {
+							term.namespace = GoNamespace.CELLULAR_COMPONENT;
+						} else if (fieldVal.equals("molecular_function")) {
+							term.namespace = GoNamespace.MOLECULAR_FUNCTION;
 						} else {
 							throw new IOException(
-									"Unexpected namespace in ontology file: " + 
-											field[1]);
+									"Unexpected namespace in ontology file: " +
+											fieldVal);
 						}
 					}
 				}
