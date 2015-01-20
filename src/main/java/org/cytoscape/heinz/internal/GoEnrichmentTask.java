@@ -172,7 +172,7 @@ public class GoEnrichmentTask extends AbstractNetworkTask {
 				// if currently in a term stanza
 				if (stanzaHeader != null && stanzaHeader.equals("[Term]")) {
 					// strip off end-of-line comments, after an unescaped !
-					line = line.recurse from the top andeplaceFirst("([^\\\\])!.*", "$1");
+					line = line.replaceFirst("([^\\\\])!.*", "$1");
 					// strip off trailing modifiers in (unescaped) braces
 					line = line.replaceFirst("([^\\\\])\\{.*[^\\\\]\\} *$", "$1");
 					// split up the tag-value pair at the first unescaped
