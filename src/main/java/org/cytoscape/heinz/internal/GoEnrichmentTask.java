@@ -44,11 +44,11 @@ public class GoEnrichmentTask extends AbstractNetworkTask {
 	
 	private static class GoTerm {
 		
-		// TODO add a list of direct children too,
-		//      to recurse from the top and collect all ancestors 
+		// TODO recurse from the top and collect all ancestors
 		public String canonicalId;
 		public GoNamespace namespace;
 		public String name;
+		public Set<GoTerm> childSet;
 		
 		public GoTerm() {
 			this(null, null, null);
@@ -57,6 +57,7 @@ public class GoEnrichmentTask extends AbstractNetworkTask {
 			this.canonicalId = canonicalId;
 			this.namespace = namespace;
 			this.name = name;
+			this.childSet = new HashSet<GoTerm>();
 		}
 		
 	}
@@ -107,7 +108,7 @@ public class GoEnrichmentTask extends AbstractNetworkTask {
     
     public static String[] getSupportedIdTypes() {
     	BioDataSource.init();
-    	Set<DataSource> availableDbs = 
+    	Set<DataSource> availableDbs =
     			DataSource.getFilteredSet(true, false, null);
     	List<String> availableDbNames = new ArrayList<String>();
     	for (DataSource db : availableDbs) {
@@ -127,7 +128,7 @@ public class GoEnrichmentTask extends AbstractNetworkTask {
 			throws IOException {
 		Map<String, GoTerm> goTermMap = new HashMap<String, GoTerm>();
 		// loop over the lines of the file
-		BufferedReader reader = 
+		BufferedReader reader =
 				new BufferedReader(new InputStreamReader(oboFile, "UTF-8"));
 		// create an empty term object to hold the properties of the first stanza
 		GoTerm term = new GoTerm();
@@ -171,7 +172,7 @@ public class GoEnrichmentTask extends AbstractNetworkTask {
 				// if currently in a term stanza
 				if (stanzaHeader != null && stanzaHeader.equals("[Term]")) {
 					// strip off end-of-line comments, after an unescaped !
-					line = line.replaceFirst("([^\\\\])!.*", "$1");
+					line = line.recurse from the top andeplaceFirst("([^\\\\])!.*", "$1");
 					// strip off trailing modifiers in (unescaped) braces
 					line = line.replaceFirst("([^\\\\])\\{.*[^\\\\]\\} *$", "$1");
 					// split up the tag-value pair at the first unescaped
@@ -244,6 +245,14 @@ public class GoEnrichmentTask extends AbstractNetworkTask {
 									"Unexpected namespace in ontology file: " +
 											fieldVal);
 						}
+					} else if (fieldTag.equals("is_a")) {
+						// if the ‘parent’ term is not yet in the map
+						if (!goTermMap.containsKey(fieldVal)) {
+							// create an empty term object for it
+							goTermMap.put(fieldVal, new GoTerm());
+						}
+						// add the current term to the child set of its parent
+						goTermMap.get(fieldVal).childSet.add(term);
 					}
 				}
 			}
@@ -253,7 +262,7 @@ public class GoEnrichmentTask extends AbstractNetworkTask {
 	}
     
     /**
-     * Create a new node table column, or overwrite an existing same-type one. 
+     * Create a new node table column, or overwrite an existing same-type one.
      * 
      * @param name  the name of the column to create or overwrite
      * @param type  the type of the column (may be List)
@@ -320,7 +329,7 @@ public class GoEnrichmentTask extends AbstractNetworkTask {
 //    	try {
 //    		// TODO
 //    		Class.forName("org.bridgedb.rdb.IDMapperRdb");
-//    		//Class.forName("org.bridgedb.webservice.bridgerest.BridgeRest"); 
+//    		//Class.forName("org.bridgedb.webservice.bridgerest.BridgeRest");
 //		} catch (ClassNotFoundException e) {
 //			throw new RuntimeException("Database driver not found");
 //		}
@@ -344,7 +353,7 @@ public class GoEnrichmentTask extends AbstractNetworkTask {
 //		taskMonitor.setStatusMessage(
 //				"Finding GO terms for the nodes");
 //		
-//		// look up the DataSource object for the gene ID type 
+//		// look up the DataSource object for the gene ID type
 //		DataSource idDataSource = DataSource.getByFullName(idType);
 //		
 //    	// create a set of Xref instances for the identifiers to be looked up
