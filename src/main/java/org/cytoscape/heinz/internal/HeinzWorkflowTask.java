@@ -47,12 +47,12 @@ public class HeinzWorkflowTask extends AbstractNetworkTask {
 	public BoundedDouble a = new BoundedDouble(0.0, 0.25, 1.0, true, true);
 	@Tunable(
 			description="Host",
-			groups={"BUM model", "Parameter fitting", "server"},
+			groups={"BUM model", "Parameter fitting", "Server"},
 			dependsOn="fitBum=true")
 	public String bumServerHost = "localhost";
 	@Tunable(
 			description="Port",
-			groups={"BUM model", "Parameter fitting", "server"},
+			groups={"BUM model", "Parameter fitting", "Server"},
 			dependsOn="fitBum=true")
 	public int bumServerPort = 9000;
 	@Tunable(
@@ -84,25 +84,25 @@ public class HeinzWorkflowTask extends AbstractNetworkTask {
 			groups={"General"})
 	public String resultColumnName = "in Heinz module";
 	
-	@Tunable(
-			description="Perform GO enrichment",
-			groups={"GO Enrichment"})
-	public Boolean performGoEnrichment = true;
-	@Tunable(
-			description="BridgeDB Derby database file (http://bridgedb.org/data/gene_database/)",
-			groups={"GO Enrichment"},
-			dependsOn="performGoEnrichment=true",
-			params="input=true")
+//	@Tunable(
+//			description="Perform GO enrichment",
+//			groups={"GO Enrichment"})
+	public Boolean performGoEnrichment = false;
+//	@Tunable(
+//			description="BridgeDB Derby database file (http://bridgedb.org/data/gene_database/)",
+//			groups={"GO Enrichment"},
+//			dependsOn="performGoEnrichment=true",
+//			params="input=true")
 	public File bridgeDbFile = null;
-	@Tunable(
-			description="Gene ID column",
-			groups={"GO Enrichment"},
-			dependsOn="performGoEnrichment=true")
+//	@Tunable(
+//			description="Gene ID column",
+//			groups={"GO Enrichment"},
+//			dependsOn="performGoEnrichment=true")
 	public ListSingleSelection<String> idColumnSelector;
-	@Tunable(
-			description="Gene ID type",
-			groups={"GO Enrichment"},
-			dependsOn="performGoEnrichment=true")
+//	@Tunable(
+//			description="Gene ID type",
+//			groups={"GO Enrichment"},
+//			dependsOn="performGoEnrichment=true")
 	public ListSingleSelection<String> idTypeSelector;
 	
 	/**
